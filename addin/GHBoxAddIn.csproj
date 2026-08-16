@@ -67,7 +67,7 @@
 
   <ItemGroup>
     <!-- 数据库检查两工具的自绘图标（Pro 资源库无对应语义图标，实测枚举确认）。
-         生成脚本：make_icons.ps1；嵌入程序集资源，DAML 用 pack URI 引用。 -->
+         图标 PNG 已生成并入库 Images/，由 csproj 作为 Resource 嵌入程序集，DAML 用 pack URI 引用。 -->
     <Resource Include="Images\SearchArc16.png" />
     <Resource Include="Images\SearchArc32.png" />
     <Resource Include="Images\FindAngle16.png" />

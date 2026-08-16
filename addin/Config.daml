@@ -124,7 +124,7 @@
 
         <!-- ===== 数据库检查分组 ===== -->
 
-        <!-- 查找弧线段：自绘图标（Pro 资源库无弧线语义图标，见 make_icons.ps1） -->
+        <!-- 查找弧线段：自绘图标（Pro 资源库无弧线语义图标，使用已入库的 Images/SearchArc PNG） -->
         <button id="GHBoxAddIn_Check_Arc"
                 caption="查找弧线段"
                 className="GHBoxAddIn.Scripts.Check.ShowSearchArc"
@@ -138,7 +138,7 @@
           </tooltip>
         </button>
 
-        <!-- 查找尖锐角：自绘图标（Pro 资源库无锐角语义图标，见 make_icons.ps1） -->
+        <!-- 查找尖锐角：自绘图标（Pro 资源库无锐角语义图标，使用已入库的 Images/FindAngle PNG） -->
         <button id="GHBoxAddIn_Check_Angle"
                 caption="查找尖锐角"
                 className="GHBoxAddIn.Scripts.Check.ShowFindAngle"

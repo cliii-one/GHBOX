@@ -151,11 +151,11 @@ GHBoxAddIn.esriAddInX        （本质是 zip）
 
 - **Pro 资源库图标的正确提取方式**：`GetManifestResourceNames()` 看不到图标条目是正常的——图标在 `.g.resources` 容器流里。
   正确做法：`ResourceReader` 打开 `ArcGIS.Desktop.Resources.g.resources` 流（2 万+ 条目全在此），按 `images/名字16.png` 条目名取出 PNG 字节原样写文件，即得 Esri 原版图标
-- **按钮图标（现役自绘方案）**：`make_icons.ps1` 用 System.Drawing 画 SearchArc/FindAngle 的 16/32 PNG → csproj `<Resource>` 嵌入程序集 → DAML `pack://application:,,,/GHBoxAddIn;component/Images/名字.png`
+- **按钮图标（自绘 PNG）**：SearchArc/FindAngle 的 16/32 PNG 已生成并入库 `Images/`，由 csproj `<Resource>` 嵌入程序集 → DAML `pack://application:,,,/GHBoxAddIn;component/Images/名字.png`
 - **工具箱级图标（AddIn 整体图标，区别于按钮图标）**：在 `Config.daml` 的 `<AddInInfo>` 内加 `<Image>Images\GHBox32.png</Image>`（包内**相对路径**，非 pack URI）。
   显示位置：Pro「加载项」管理列表中该插件条目的图标。
   注意打包链路：`build_all.ps1` 会把 `Images/` 目录复制进 .esriAddInX 包根（与 Config.daml 同级），缺这步图标不显示
-- **当前品牌图标**：官方原版 `geoprocessingtoolbox16/32.png`（Pro 目录树中 GP 工具箱经典图标），已提取入库 `Images/GHBox16/32.png`，不在 `make_icons.ps1` 重绘（该脚本只画按钮图标 SearchArc/FindAngle）
+- **当前品牌图标**：官方原版 `geoprocessingtoolbox16/32.png`（Pro 目录树中 GP 工具箱经典图标），已提取入库 `Images/GHBox16/32.png`；按钮图标 SearchArc/FindAngle 的 PNG 同样已生成入库 `Images/`（如需重绘，自行生成 16/32 PNG 放入 `Images/` 即由 csproj 嵌入）
   历史教训：代码自绘小图标（字体渲染发虚、几何拼数字认不出）观感差，**优先用官方资源库提取现成图标**
 - **铁律：图标名必须实测存在再上 DAML，空白按钮就是这么来的**
 
