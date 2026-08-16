@@ -25,6 +25,11 @@ $csproj    = Join-Path $addinDir 'GHBoxAddIn.csproj'
 $distDir   = Join-Path $addinDir 'dist'
 New-Item $distDir -ItemType Directory -Force | Out-Null
 
+# 全局版本号（唯一来源：仓库根目录 version.txt），驱动 Config.daml / DLL / Release
+$version = (Get-Content (Join-Path $addinDir '..\version.txt') -Raw).Trim()
+if (-not $version) { throw 'version.txt 为空，无法确定版本号。' }
+Write-Host "全局版本号：$version" -ForegroundColor Cyan
+
 # 本机 ArcGIS Pro（仅 -Install 时需要；注册工具 RegisterAddIn.exe 随 Pro 安装）
 $registerExe = 'D:\ArcGIS\Pro\bin\RegisterAddIn.exe'
 
@@ -37,7 +42,7 @@ foreach ($t in $targets) {
     # 1. 编译（NuGet 还原 + 构建）
     #    CopyLocalLockFileAssemblies=true：第三方依赖（ClosedXML 等）复制到 bin，
     #    供下方"依赖 DLL 进包"步骤打进 Install/ 目录（Esri 包已用 ExcludeAssets=runtime 排除，不会重复）。
-    dotnet build $csproj -c Release -p:BuildFlavor=$flavor -p:CopyLocalLockFileAssemblies=true
+    dotnet build $csproj -c Release -p:BuildFlavor=$flavor -p:Version=$version -p:CopyLocalLockFileAssemblies=true
     if ($LASTEXITCODE -ne 0) { Write-Host "[$flavor] 编译失败，跳过该版本。" -ForegroundColor Red; continue }
 
     $binDir = Join-Path $addinDir "bin\Release"
@@ -54,6 +59,9 @@ foreach ($t in $targets) {
     # desktopVersion 是"最低兼容版本"：写成各档最低值，供 Pro 判断能否加载
     $daml = Get-Content (Join-Path $addinDir 'Config.daml') -Raw -Encoding UTF8
     $daml = $daml -replace 'desktopVersion="[^"]*"', "desktopVersion=`"$($t.DamlVersion)`""
+    # 全局版本号注入 AddInInfo 的 version：
+    # 仅匹配 <AddInInfo ...> 标签内部的 version 属性，从根本上排除 <?xml 声明 与 desktopVersion
+    $daml = [regex]::Replace($daml, '(<AddInInfo[^>]*?)\sversion="[^"]*"', ('${1} version="' + $version + '"'))
     [IO.File]::WriteAllText((Join-Path $staging 'Config.daml'), $daml, [Text.UTF8Encoding]::new($false))
 
     # 工具箱级图标：AddInInfo 的 <Image> 用包内相对路径（Images\GHBox32.png），

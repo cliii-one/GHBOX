@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ArcGIS defaultAssembly="GHBoxAddIn.dll" defaultNamespace="GHBoxAddIn" xmlns="http://schemas.esri.com/DADF/Registry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///D:/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
-  <AddInInfo id="{6791b809-48ed-4d84-936f-46c0db7dd0ce}" version="1.0" desktopVersion="3.6">
+  <AddInInfo id="{6791b809-48ed-4d84-936f-46c0db7dd0ce}" version="1.0.0" desktopVersion="3.6">
     <Name>规划盒子</Name>
     <Description>规划盒子：面向国土空间规划数据库的批处理工具集，提供数据库合并、拆分、比对、唯一编码、面积重算等处理能力，以及弧线段、尖锐角等入库前质量检查。</Description>
     <!-- 工具箱级图标：显示在"加载项"管理列表中（Images\GHBox32.png 由 build_all.ps1 复制进包） -->

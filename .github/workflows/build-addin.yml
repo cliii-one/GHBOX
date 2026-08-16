@@ -1,19 +1,25 @@
 # ============================================================
 # GHBOX「规划盒子」自动构建 + 自动发布到 GitHub Releases
 #
-# 触发方式：
-#   1. push 到 master/main，且改动涉及构建相关路径 → 自动构建并发布
-#   2. 手工触发（Actions 页面 → Run workflow）→ 立即构建并发布
+# 版本唯一来源：仓库根目录 version.txt（例如 1.0.0）。
+#   - Config.daml 的 version、DLL 版本、Release 的 tag/名称 全部由它派生，
+#     改版本只需改这一个文件。
 #
-# 产物：addin/dist/ 下三个 .esriAddInX（Pro30/Pro33/Pro37），
-#      构建成功后自动挂到 GitHub Releases（tag 形如 v<版本>-<run序号>）。
+# 触发方式：
+#   1. 手工触发（Actions 页面 → Run workflow）→ 始终构建并发布
+#   2. push 到 master/main，且改动涉及构建相关路径
+#      → 仅当 version.txt 的版本相对"已有 Release"发生变化时才构建；
+#        版本未变则跳过（避免无意义的重复发布）
+#
+# 发布策略：
+#   - tag = v<版本>（与 version.txt 完全一致），Release 名 = 规划盒子 v<版本>
+#   - 发布后自动删除所有历史 Release（及其 tag），仓库只保留最新一版
 #
 # 设计要点：
-#   - 构建链路本身就是"无本机 Pro 依赖"（NuGet 官方 Esri 包），
-#     因此 CI 只装 .NET SDK（6/8/10 三档）即可编译打包
+#   - 构建链路本身"无本机 Pro 依赖"（NuGet 官方 Esri 包），CI 只装 .NET SDK 即可
 #   - 不调用 -Install（RegisterAddIn.exe 依赖本机 D:\ArcGIS\Pro，CI 上不可用）
 #   - build_all.ps1 对单档失败会 continue，故构建后增加独立校验步骤，
-#     任一包缺失或结构不对都会让整个 job 失败，杜绝"半成品发布"
+#     任一包缺失或结构不对都让整个 job 失败，杜绝"半成品发布"
 # ============================================================
 name: build-addin
 
@@ -24,10 +30,11 @@ on:
       - 'addin/**'
       - 'toolbox/**'
       - 'AddIn开发指南.md'
+      - 'version.txt'
       - '.github/workflows/build-addin.yml'
   workflow_dispatch:
 
-# 需要写权限：创建 tag / 发布 Release
+# 需要写权限：查询/创建/删除 Release 与 tag
 permissions:
   contents: write
 
@@ -36,79 +43,128 @@ concurrency:
   group: build-addin-${{ github.ref }}
   cancel-in-progress: true
 
-jobs:
-  build:
-    runs-on: windows-latest
-    steps:
-      - name: 检出代码
-        uses: actions/checkout@v4
+# ---------- 阶段一：判断是否构建 ----------
+# 读取 version.txt；手动触发始终构建，push 触发则仅当该版本尚未发布才构建。
+check:
+  runs-on: ubuntu-latest
+  outputs:
+    version: ${{ steps.ver.outputs.version }}
+    tag: ${{ steps.ver.outputs.tag }}
+    should_build: ${{ steps.gate.outputs.should_build }}
+  steps:
+    - uses: actions/checkout@v4
 
-      - name: 安装 .NET SDK（6 / 8 / 10 对应 Pro30 / Pro33 / Pro37）
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: |
-            6.0.x
-            8.0.x
-            10.0.x
+    - name: 读取版本号
+      id: ver
+      shell: bash
+      run: |
+        VERSION=$(cat version.txt | tr -d '[:space:]')
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: 构建三档安装包（build_all.ps1）
-        shell: pwsh
-        run: |
-          pwsh -File addin/build_all.ps1
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    - name: 判定是否构建
+      id: gate
+      env:
+        GH_TOKEN: ${{ github.token }}
+      shell: bash
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "手动触发，强制构建。"
+          echo "should_build=true" >> "$GITHUB_OUTPUT"
+        elif gh release view "${{ steps.ver.outputs.tag }}" >/dev/null 2>&1; then
+          echo "版本 ${{ steps.ver.outputs.tag }} 已发布，跳过构建（如需重发请手动触发）。"
+          echo "should_build=false" >> "$GITHUB_OUTPUT"
+        else
+          echo "版本 ${{ steps.ver.outputs.tag }} 尚未发布，开始构建。"
+          echo "should_build=true" >> "$GITHUB_OUTPUT"
+        fi
 
-      - name: 校验产物（包结构与依赖完整性）
-        shell: pwsh
-        run: |
-          Add-Type -AssemblyName System.IO.Compression.FileSystem
-          $ErrorActionPreference = 'Stop'
-          foreach ($pkg in 'Pro30', 'Pro33', 'Pro37') {
-            $path = "addin/dist/GHBoxAddIn_$pkg.esriAddInX"
-            if (-not (Test-Path $path)) { throw "缺少安装包：$path" }
-            $zip = [IO.Compression.ZipFile]::OpenRead((Resolve-Path $path))
-            $names = @($zip.Entries.FullName)
-            $zip.Dispose()
-            if ($names -notcontains 'Config.daml')            { throw "$pkg：包内缺少 Config.daml" }
-            if ($names -notcontains 'Install/GHBoxAddIn.dll') { throw "$pkg：主 DLL 不在 Install/ 下" }
-            if ($names -notcontains 'Install/ClosedXML.dll')  { throw "$pkg：ClosedXML 未进包" }
-            if ($names -notcontains 'Images/GHBox32.png')     { throw "$pkg：品牌图标未进包" }
-            $mb = [math]::Round((Get-Item $path).Length / 1MB, 2)
-            Write-Host "OK [$pkg] $path ($mb MB)"
+# ---------- 阶段二：构建并发布 ----------
+build:
+  needs: check
+  if: needs.check.outputs.should_build == 'true'
+  runs-on: windows-latest
+  steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 安装 .NET SDK（6 / 8 / 10 对应 Pro30 / Pro33 / Pro37）
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          6.0.x
+          8.0.x
+          10.0.x
+
+    - name: 构建三档安装包（build_all.ps1，版本来自 version.txt）
+      shell: pwsh
+      run: |
+        pwsh -File addin/build_all.ps1
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    - name: 校验产物（包结构与依赖完整性）
+      shell: pwsh
+      run: |
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        $ErrorActionPreference = 'Stop'
+        foreach ($pkg in 'Pro30', 'Pro33', 'Pro37') {
+          $path = "addin/dist/GHBoxAddIn_$pkg.esriAddInX"
+          if (-not (Test-Path $path)) { throw "缺少安装包：$path" }
+          $zip = [IO.Compression.ZipFile]::OpenRead((Resolve-Path $path))
+          $names = @($zip.Entries.FullName)
+          $zip.Dispose()
+          if ($names -notcontains 'Config.daml')            { throw "$pkg：包内缺少 Config.daml" }
+          if ($names -notcontains 'Install/GHBoxAddIn.dll') { throw "$pkg：主 DLL 不在 Install/ 下" }
+          if ($names -notcontains 'Install/ClosedXML.dll')  { throw "$pkg：ClosedXML 未进包" }
+          if ($names -notcontains 'Images/GHBox32.png')     { throw "$pkg：品牌图标未进包" }
+          $mb = [math]::Round((Get-Item $path).Length / 1MB, 2)
+          Write-Host "OK [$pkg] $path ($mb MB)"
+        }
+        Write-Host '全部安装包校验通过。'
+
+    - name: 发布到 GitHub Releases（tag 与 version.txt 一致，覆盖同名版本）
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ needs.check.outputs.tag }}
+        name: 规划盒子 v${{ needs.check.outputs.version }}
+        body: |
+          ## 自动构建发布
+
+          - 版本：`${{ needs.check.outputs.version }}`（与仓库 version.txt 一致）
+          - 提交：`${{ github.sha }}`
+          - 提交说明：${{ github.event.head_commit.message }}
+          - 触发方式：${{ github.event_name }}（分支：`${{ github.ref_name }}`）
+
+          ### 安装包三档（按 ArcGIS Pro 版本选择）
+
+          | 安装包 | 适用 Pro 版本 | .NET |
+          |---|---|---|
+          | `GHBoxAddIn_Pro30.esriAddInX` | 3.0 ~ 3.2 | .NET 6 |
+          | `GHBoxAddIn_Pro33.esriAddInX` | 3.3 ~ 3.6 | .NET 8 |
+          | `GHBoxAddIn_Pro37.esriAddInX` | 3.7+ | .NET 10 |
+
+          ### 安装方式
+
+          下载与你的 ArcGIS Pro 版本匹配的 `.esriAddInX`，双击安装，
+          完全退出并重新启动 ArcGIS Pro 后，在功能区「规划盒子」选项卡使用。
+        files: addin/dist/*.esriAddInX
+        fail_on_unmatched_files: true
+        overwrite: true
+
+    - name: 仅保留最新 Release（删除全部历史版本及其 tag）
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const tag = '${{ needs.check.outputs.tag }}';
+          const { owner, repo } = context.repo;
+          const releases = await github.rest.repos.listReleases({ owner, repo, per_page: 100 });
+          for (const r of releases.data) {
+            if (r.tag_name === tag) continue;   // 跳过刚发布的当前版本
+            console.log('删除历史 Release:', r.tag_name);
+            await github.rest.repos.deleteRelease({ owner, repo, release_id: r.id });
+            try {
+              await github.rest.git.deleteRef({ owner, repo, ref: `tags/${r.tag_name}` });
+            } catch (e) {
+              console.log('  tag 删除跳过（可能不存在）:', r.tag_name);
+            }
           }
-          Write-Host '全部安装包校验通过。'
-
-      - name: 生成版本号（读取 addin/Config.daml 的 version）
-        id: version
-        shell: bash
-        run: |
-          VER=$(sed -n 's/.*version="\([^"]*\)".*/\1/p' addin/Config.daml | head -1)
-          [ -z "$VER" ] && VER="1.0"
-          echo "app_version=$VER" >> "$GITHUB_OUTPUT"
-          echo "tag=v${VER}-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
-
-      - name: 发布到 GitHub Releases
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: 规划盒子 v${{ steps.version.outputs.app_version }} (build ${{ github.run_number }})
-          body: |
-            ## 自动构建发布
-
-            - 提交：`${{ github.sha }}`
-            - 提交说明：${{ github.event.head_commit.message }}
-            - 触发方式：${{ github.event_name }}（分支：`${{ github.ref_name }}`）
-
-            ### 安装包三档（按 ArcGIS Pro 版本选择）
-
-            | 安装包 | 适用 Pro 版本 | .NET |
-            |---|---|---|
-            | `GHBoxAddIn_Pro30.esriAddInX` | 3.0 ~ 3.2 | .NET 6 |
-            | `GHBoxAddIn_Pro33.esriAddInX` | 3.3 ~ 3.6 | .NET 8 |
-            | `GHBoxAddIn_Pro37.esriAddInX` | 3.7+ | .NET 10 |
-
-            ### 安装方式
-
-            下载与你的 ArcGIS Pro 版本匹配的 `.esriAddInX`，双击安装，
-            完全退出并重新启动 ArcGIS Pro 后，在功能区「规划盒子」选项卡使用。
-          files: addin/dist/*.esriAddInX
-          fail_on_unmatched_files: true
