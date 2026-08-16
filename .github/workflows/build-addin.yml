@@ -5,11 +5,11 @@
 #   - Config.daml 的 version、DLL 版本、Release 的 tag/名称 全部由它派生，
 #     改版本只需改这一个文件。
 #
-# 触发方式：
+# 触发方式（只有两种，严格对应"手动"与"version 变化"）：
 #   1. 手工触发（Actions 页面 → Run workflow）→ 始终构建并发布
-#   2. push 到 master/main，且改动涉及构建相关路径
-#      → 仅当 version.txt 的版本相对"已有 Release"发生变化时才构建；
-#        版本未变则跳过（避免无意义的重复发布）
+#   2. push 到 master/main，且改动涉及 version.txt（或工作流自身）
+#      → 仅当 version.txt 的版本相对"已有 Release"尚未发布时才构建；
+#        版本未变则跳过。注意：只改代码不动 version.txt 的推送不会触发本工作流。
 #
 # 发布策略：
 #   - tag = v<版本>（与 version.txt 完全一致），Release 名 = 规划盒子 v<版本>
@@ -27,9 +27,6 @@ on:
   push:
     branches: [master, main]
     paths:
-      - 'addin/**'
-      - 'toolbox/**'
-      - 'AddIn开发指南.md'
       - 'version.txt'
       - '.github/workflows/build-addin.yml'
   workflow_dispatch:
@@ -43,128 +40,129 @@ concurrency:
   group: build-addin-${{ github.ref }}
   cancel-in-progress: true
 
-# ---------- 阶段一：判断是否构建 ----------
-# 读取 version.txt；手动触发始终构建，push 触发则仅当该版本尚未发布才构建。
-check:
-  runs-on: ubuntu-latest
-  outputs:
-    version: ${{ steps.ver.outputs.version }}
-    tag: ${{ steps.ver.outputs.tag }}
-    should_build: ${{ steps.gate.outputs.should_build }}
-  steps:
-    - uses: actions/checkout@v4
+jobs:
+  # ---------- 阶段一：判断是否构建 ----------
+  # 读取 version.txt；手动触发始终构建，push 触发则仅当该版本尚未发布才构建。
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+      tag: ${{ steps.ver.outputs.tag }}
+      should_build: ${{ steps.gate.outputs.should_build }}
+    steps:
+      - uses: actions/checkout@v4
 
-    - name: 读取版本号
-      id: ver
-      shell: bash
-      run: |
-        VERSION=$(cat version.txt | tr -d '[:space:]')
-        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-        echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+      - name: 读取版本号
+        id: ver
+        shell: bash
+        run: |
+          VERSION=$(cat version.txt | tr -d '[:space:]')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
 
-    - name: 判定是否构建
-      id: gate
-      env:
-        GH_TOKEN: ${{ github.token }}
-      shell: bash
-      run: |
-        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-          echo "手动触发，强制构建。"
-          echo "should_build=true" >> "$GITHUB_OUTPUT"
-        elif gh release view "${{ steps.ver.outputs.tag }}" >/dev/null 2>&1; then
-          echo "版本 ${{ steps.ver.outputs.tag }} 已发布，跳过构建（如需重发请手动触发）。"
-          echo "should_build=false" >> "$GITHUB_OUTPUT"
-        else
-          echo "版本 ${{ steps.ver.outputs.tag }} 尚未发布，开始构建。"
-          echo "should_build=true" >> "$GITHUB_OUTPUT"
-        fi
+      - name: 判定是否构建
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "手动触发，强制构建。"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          elif gh release view "${{ steps.ver.outputs.tag }}" >/dev/null 2>&1; then
+            echo "版本 ${{ steps.ver.outputs.tag }} 已发布，跳过构建（如需重发请手动触发）。"
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "版本 ${{ steps.ver.outputs.tag }} 尚未发布，开始构建。"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          fi
 
-# ---------- 阶段二：构建并发布 ----------
-build:
-  needs: check
-  if: needs.check.outputs.should_build == 'true'
-  runs-on: windows-latest
-  steps:
-    - name: 检出代码
-      uses: actions/checkout@v4
+  # ---------- 阶段二：构建并发布 ----------
+  build:
+    needs: check
+    if: needs.check.outputs.should_build == 'true'
+    runs-on: windows-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
 
-    - name: 安装 .NET SDK（6 / 8 / 10 对应 Pro30 / Pro33 / Pro37）
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: |
-          6.0.x
-          8.0.x
-          10.0.x
+      - name: 安装 .NET SDK（6 / 8 / 10 对应 Pro30 / Pro33 / Pro37）
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            6.0.x
+            8.0.x
+            10.0.x
 
-    - name: 构建三档安装包（build_all.ps1，版本来自 version.txt）
-      shell: pwsh
-      run: |
-        pwsh -File addin/build_all.ps1
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: 构建三档安装包（build_all.ps1，版本来自 version.txt）
+        shell: pwsh
+        run: |
+          pwsh -File addin/build_all.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-    - name: 校验产物（包结构与依赖完整性）
-      shell: pwsh
-      run: |
-        Add-Type -AssemblyName System.IO.Compression.FileSystem
-        $ErrorActionPreference = 'Stop'
-        foreach ($pkg in 'Pro30', 'Pro33', 'Pro37') {
-          $path = "addin/dist/GHBoxAddIn_$pkg.esriAddInX"
-          if (-not (Test-Path $path)) { throw "缺少安装包：$path" }
-          $zip = [IO.Compression.ZipFile]::OpenRead((Resolve-Path $path))
-          $names = @($zip.Entries.FullName)
-          $zip.Dispose()
-          if ($names -notcontains 'Config.daml')            { throw "$pkg：包内缺少 Config.daml" }
-          if ($names -notcontains 'Install/GHBoxAddIn.dll') { throw "$pkg：主 DLL 不在 Install/ 下" }
-          if ($names -notcontains 'Install/ClosedXML.dll')  { throw "$pkg：ClosedXML 未进包" }
-          if ($names -notcontains 'Images/GHBox32.png')     { throw "$pkg：品牌图标未进包" }
-          $mb = [math]::Round((Get-Item $path).Length / 1MB, 2)
-          Write-Host "OK [$pkg] $path ($mb MB)"
-        }
-        Write-Host '全部安装包校验通过。'
-
-    - name: 发布到 GitHub Releases（tag 与 version.txt 一致，覆盖同名版本）
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: ${{ needs.check.outputs.tag }}
-        name: 规划盒子 v${{ needs.check.outputs.version }}
-        body: |
-          ## 自动构建发布
-
-          - 版本：`${{ needs.check.outputs.version }}`（与仓库 version.txt 一致）
-          - 提交：`${{ github.sha }}`
-          - 提交说明：${{ github.event.head_commit.message }}
-          - 触发方式：${{ github.event_name }}（分支：`${{ github.ref_name }}`）
-
-          ### 安装包三档（按 ArcGIS Pro 版本选择）
-
-          | 安装包 | 适用 Pro 版本 | .NET |
-          |---|---|---|
-          | `GHBoxAddIn_Pro30.esriAddInX` | 3.0 ~ 3.2 | .NET 6 |
-          | `GHBoxAddIn_Pro33.esriAddInX` | 3.3 ~ 3.6 | .NET 8 |
-          | `GHBoxAddIn_Pro37.esriAddInX` | 3.7+ | .NET 10 |
-
-          ### 安装方式
-
-          下载与你的 ArcGIS Pro 版本匹配的 `.esriAddInX`，双击安装，
-          完全退出并重新启动 ArcGIS Pro 后，在功能区「规划盒子」选项卡使用。
-        files: addin/dist/*.esriAddInX
-        fail_on_unmatched_files: true
-        overwrite: true
-
-    - name: 仅保留最新 Release（删除全部历史版本及其 tag）
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const tag = '${{ needs.check.outputs.tag }}';
-          const { owner, repo } = context.repo;
-          const releases = await github.rest.repos.listReleases({ owner, repo, per_page: 100 });
-          for (const r of releases.data) {
-            if (r.tag_name === tag) continue;   // 跳过刚发布的当前版本
-            console.log('删除历史 Release:', r.tag_name);
-            await github.rest.repos.deleteRelease({ owner, repo, release_id: r.id });
-            try {
-              await github.rest.git.deleteRef({ owner, repo, ref: `tags/${r.tag_name}` });
-            } catch (e) {
-              console.log('  tag 删除跳过（可能不存在）:', r.tag_name);
-            }
+      - name: 校验产物（包结构与依赖完整性）
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $ErrorActionPreference = 'Stop'
+          foreach ($pkg in 'Pro30', 'Pro33', 'Pro37') {
+            $path = "addin/dist/GHBoxAddIn_$pkg.esriAddInX"
+            if (-not (Test-Path $path)) { throw "缺少安装包：$path" }
+            $zip = [IO.Compression.ZipFile]::OpenRead((Resolve-Path $path))
+            $names = @($zip.Entries.FullName)
+            $zip.Dispose()
+            if ($names -notcontains 'Config.daml')            { throw "$pkg：包内缺少 Config.daml" }
+            if ($names -notcontains 'Install/GHBoxAddIn.dll') { throw "$pkg：主 DLL 不在 Install/ 下" }
+            if ($names -notcontains 'Install/ClosedXML.dll')  { throw "$pkg：ClosedXML 未进包" }
+            if ($names -notcontains 'Images/GHBox32.png')     { throw "$pkg：品牌图标未进包" }
+            $mb = [math]::Round((Get-Item $path).Length / 1MB, 2)
+            Write-Host "OK [$pkg] $path ($mb MB)"
           }
+          Write-Host '全部安装包校验通过。'
+
+      - name: 发布到 GitHub Releases（tag 与 version.txt 一致，覆盖同名版本）
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.check.outputs.tag }}
+          name: 规划盒子 v${{ needs.check.outputs.version }}
+          body: |
+            ## 自动构建发布
+
+            - 版本：`${{ needs.check.outputs.version }}`（与仓库 version.txt 一致）
+            - 提交：`${{ github.sha }}`
+            - 提交说明：${{ github.event.head_commit.message }}
+            - 触发方式：${{ github.event_name }}（分支：`${{ github.ref_name }}`）
+
+            ### 安装包三档（按 ArcGIS Pro 版本选择）
+
+            | 安装包 | 适用 Pro 版本 | .NET |
+            |---|---|---|
+            | `GHBoxAddIn_Pro30.esriAddInX` | 3.0 ~ 3.2 | .NET 6 |
+            | `GHBoxAddIn_Pro33.esriAddInX` | 3.3 ~ 3.6 | .NET 8 |
+            | `GHBoxAddIn_Pro37.esriAddInX` | 3.7+ | .NET 10 |
+
+            ### 安装方式
+
+            下载与你的 ArcGIS Pro 版本匹配的 `.esriAddInX`，双击安装，
+            完全退出并重新启动 ArcGIS Pro 后，在功能区「规划盒子」选项卡使用。
+          files: addin/dist/*.esriAddInX
+          fail_on_unmatched_files: true
+          overwrite: true
+
+      - name: 仅保留最新 Release（删除全部历史版本及其 tag）
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tag = '${{ needs.check.outputs.tag }}';
+            const { owner, repo } = context.repo;
+            const releases = await github.rest.repos.listReleases({ owner, repo, per_page: 100 });
+            for (const r of releases.data) {
+              if (r.tag_name === tag) continue;   // 跳过刚发布的当前版本
+              console.log('删除历史 Release:', r.tag_name);
+              await github.rest.repos.deleteRelease({ owner, repo, release_id: r.id });
+              try {
+                await github.rest.git.deleteRef({ owner, repo, ref: `tags/${r.tag_name}` });
+              } catch (e) {
+                console.log('  tag 删除跳过（可能不存在）:', r.tag_name);
+              }
+            }
