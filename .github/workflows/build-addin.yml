@@ -7,9 +7,9 @@
 #
 # 触发方式（只有两种，严格对应"手动"与"version 变化"）：
 #   1. 手工触发（Actions 页面 → Run workflow）→ 始终构建并发布
-#   2. push 到 master/main，且改动涉及 version.txt（或工作流自身）
+#   2. push 到 master/main，且改动涉及 version.txt
 #      → 仅当 version.txt 的版本相对"已有 Release"尚未发布时才构建；
-#        版本未变则跳过。注意：只改代码不动 version.txt 的推送不会触发本工作流。
+#        版本未变则跳过。注意：只改代码或 CI 脚本（不动 version.txt）的推送不会触发本工作流。
 #
 # 发布策略：
 #   - tag = v<版本>（与 version.txt 完全一致），Release 名 = 规划盒子 v<版本>
@@ -28,7 +28,6 @@ on:
     branches: [master, main]
     paths:
       - 'version.txt'
-      - '.github/workflows/build-addin.yml'
   workflow_dispatch:
 
 # 需要写权限：查询/创建/删除 Release 与 tag
