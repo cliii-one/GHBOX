@@ -50,7 +50,7 @@ jobs:
       tag: ${{ steps.ver.outputs.tag }}
       should_build: ${{ steps.gate.outputs.should_build }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: 读取版本号
         id: ver
@@ -84,7 +84,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: 检出代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 安装 .NET SDK（6 / 8 / 10 对应 Pro30 / Pro33 / Pro37）
         uses: actions/setup-dotnet@v4
