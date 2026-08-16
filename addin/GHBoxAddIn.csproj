@@ -72,7 +72,7 @@
     <Resource Include="Images\SearchArc32.png" />
     <Resource Include="Images\FindAngle16.png" />
     <Resource Include="Images\FindAngle32.png" />
-    <!-- 工具箱级品牌图标（"308"元素）：AddInInfo 的 Image 标签引用包内 Images\GHBox32.png -->
+    <!-- 工具箱级品牌图标：AddInInfo 的 Image 标签引用包内 Images\GHBox32.png -->
     <Resource Include="Images\GHBox16.png" />
     <Resource Include="Images\GHBox32.png" />
   </ItemGroup>
