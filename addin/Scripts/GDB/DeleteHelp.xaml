@@ -1,0 +1,43 @@
+<controls:ProWindow x:Class="GHBoxAddIn.Scripts.GDB.DeleteHelp"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+        mc:Ignorable="d"
+        Title="删除图层 - 使用说明" Height="560" Width="680"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="16">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="删除图层工具" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" />
+
+                <TextBlock Text="一、工具用途" FontSize="14" FontWeight="Bold" Margin="0,8,0,4" />
+                <TextBlock TextWrapping="Wrap" Margin="8,0,0,4"
+                           Text="遍历根文件夹下（含子文件夹）所有 GDB/MDB 数据库，按模式批量删除或保留指定图层，适合批量清理各县数据库冗余图层的场景。" />
+
+                <TextBlock Text="二、参数说明" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 根文件夹：工具将递归查找其下所有 .gdb 和 .mdb 数据库。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 图层名称列表：要操作的图层名，多个用英文逗号分隔（支持中文逗号），不区分大小写。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 操作类型：" TextWrapping="Wrap" />
+                <TextBlock Margin="16,0,0,2" Text="· 删除模式：仅删除名单内的图层；" TextWrapping="Wrap" />
+                <TextBlock Margin="16,0,0,2" Text="· 保留模式：删除名单以外的一切图层。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="4. 删除空数据集（可选）：图层删除后，若所属要素数据集已空则一并清理。" TextWrapping="Wrap" />
+
+                <TextBlock Text="三、处理规则" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 枚举范围包含要素类、独立表、栅格数据集，以及要素数据集内的图层。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 系统表（GDB_ 开头）自动跳过，不受保留模式影响。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 空数据库（无用户数据）直接跳过。" TextWrapping="Wrap" />
+
+                <TextBlock Text="四、容错机制" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 单个图层删除失败：记录警告，继续删除下一个图层。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 单个数据库遍历失败：记入「问题数据库列表」，继续处理后续数据库。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 全部结束后输出最终统计：处理库数、删除/保留图层数、问题数据库列表。" TextWrapping="Wrap" />
+
+                <TextBlock Text="五、注意事项" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" TextWrapping="Wrap"
+                           Text="删除操作不可撤销，请确认根文件夹与图层名单无误后再执行；建议先在备份副本上试运行。" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</controls:ProWindow>

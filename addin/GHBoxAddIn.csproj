@@ -1,0 +1,79 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- ============ 版本方案 ============
+       通过 BuildFlavor 参数切换目标 Pro 版本（由 build_all.ps1 依次调用，一次生成全部包）：
+
+       Pro30 → Pro 3.0~3.2（.NET 6）    Pro33 → Pro 3.3~3.6（.NET 8）    Pro37 → Pro 3.7+（.NET 10）
+
+       程序集引用 Esri 官方 NuGet 包 Esri.ArcGISPro.Extensions30，
+       不依赖本机 ArcGIS Pro 安装路径，任何机器都能编译。 -->
+
+  <PropertyGroup>
+    <UseWPF>true</UseWPF>
+    <PlatformTarget>x64</PlatformTarget>
+    <Platforms>x64</Platforms>
+    <AssemblyName>GHBoxAddIn</AssemblyName>
+    <RootNamespace>GHBoxAddIn</RootNamespace>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <!-- 按 BuildFlavor 选择目标框架与 NuGet 版本（默认 Pro33，对应本机 Pro 3.6） -->
+  <Choose>
+    <When Condition="'$(BuildFlavor)' == 'Pro30'">
+      <PropertyGroup>
+        <TargetFramework>net6.0-windows</TargetFramework>
+        <ProNuGetVersion>3.2.0.49743</ProNuGetVersion>
+        <ClosedXmlVersion>0.102.0</ClosedXmlVersion>
+      </PropertyGroup>
+    </When>
+    <When Condition="'$(BuildFlavor)' == 'Pro37'">
+      <PropertyGroup>
+        <TargetFramework>net10.0-windows</TargetFramework>
+        <ProNuGetVersion>3.7.0.1901</ProNuGetVersion>
+        <ClosedXmlVersion>0.105.1</ClosedXmlVersion>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <TargetFramework>net8.0-windows</TargetFramework>
+        <ProNuGetVersion>3.3.0.52636</ProNuGetVersion>
+        <ClosedXmlVersion>0.104.2</ClosedXmlVersion>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+
+  <ItemGroup>
+    <!-- ArcGIS Pro 全部公共 API 程序集，随 Pro 版本走。
+         ExcludeAssets="build;buildTransitive"：排除包内 Esri targets（其打包任务在 dotnet CLI 下不可用会报 MSB4801）；
+         ExcludeAssets="runtime"：Esri DLL 由 Pro 运行时自带，不复制进 AddIn 包（避免版本冲突与包膨胀），
+         但第三方依赖（ClosedXML）正常复制到 bin，由 build_all.ps1 打进包的 Install/ 目录。 -->
+    <PackageReference Include="Esri.ArcGISPro.Extensions30" Version="$(ProNuGetVersion)"
+                      ExcludeAssets="build;buildTransitive;runtime" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- ClosedXML：生成 Excel 比对报告（数据库比对工具）。
+         net6 用 0.102.0（兼容旧运行时），net8/net10 用最新。 -->
+    <PackageReference Include="ClosedXML" Version="$(ClosedXmlVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Config.daml 打包时由脚本读取源文件并替换 desktopVersion，无需复制到输出目录 -->
+    <Content Remove="Config.daml" />
+    <None Remove="Config.daml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 数据库检查两工具的自绘图标（Pro 资源库无对应语义图标，实测枚举确认）。
+         生成脚本：make_icons.ps1；嵌入程序集资源，DAML 用 pack URI 引用。 -->
+    <Resource Include="Images\SearchArc16.png" />
+    <Resource Include="Images\SearchArc32.png" />
+    <Resource Include="Images\FindAngle16.png" />
+    <Resource Include="Images\FindAngle32.png" />
+    <!-- 工具箱级品牌图标（"308"元素）：AddInInfo 的 Image 标签引用包内 Images\GHBox32.png -->
+    <Resource Include="Images\GHBox16.png" />
+    <Resource Include="Images\GHBox32.png" />
+  </ItemGroup>
+</Project>

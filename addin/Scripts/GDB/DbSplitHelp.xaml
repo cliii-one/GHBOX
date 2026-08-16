@@ -1,0 +1,44 @@
+<controls:ProWindow x:Class="GHBoxAddIn.Scripts.GDB.DbSplitHelp"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+        mc:Ignorable="d"
+        Title="数据库拆分 - 使用说明" Height="560" Width="680"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="16">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="数据库拆分工具" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" />
+
+                <TextBlock Text="一、工具用途" FontSize="14" FontWeight="Bold" Margin="0,8,0,4" />
+                <TextBlock TextWrapping="Wrap" Margin="8,0,0,4"
+                           Text="根据要素类中的 XDM（县代码）和 XMC（县名称）字段，将省级地理数据库拆分为各县独立的 GDB。县级数据库命名：XDM+XMC.gdb，例如 421000湖北省.gdb 拆分后得到 421101武汉市市区.gdb 等县级库。" />
+
+                <TextBlock Text="二、参数说明" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 输入省级数据库：待拆分的 .gdb 文件地理数据库。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 输出根文件夹：各县数据库创建在此目录下。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 原图层名前缀（可空）：仅命名格式②生效。例如原图层名为“湖北省zqcsfw”，填写“湖北省”后图层名称基础部分变为 zqcsfw。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="4. 输出图层命名格式：" TextWrapping="Wrap" />
+                <TextBlock Margin="16,0,0,2" Text="· 格式①：与原始图层名称保持一致（不添加县名，不移除前缀）；" TextWrapping="Wrap" />
+                <TextBlock Margin="16,0,0,2" Text="· 格式②：县名称 + 移除前缀后的图层名，如 武汉市zqcsfw。" TextWrapping="Wrap" />
+
+                <TextBlock Text="三、处理规则" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 仅处理含 XDM 和 XMC 字段的要素类，缺少字段的自动跳过并警告。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 逐县按 XDM = '县代码' 条件筛选导出（Select 工具）。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 某县在某图层无要素时，不创建空图层（导出后删除并警告）。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="4. 同一县代码在数据中出现多个县名时，以第一个出现的县名为准。" TextWrapping="Wrap" />
+
+                <TextBlock Text="四、容错机制" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 单个图层导出失败：记录错误，继续导出下一个图层，不中断整体。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 已存在的县级数据库不重复创建，图层重复导出时自动覆盖。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 处理过程中可随时点击「取消」中止。" TextWrapping="Wrap" />
+
+                <TextBlock Text="五、注意事项" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" TextWrapping="Wrap"
+                           Text="请确保输入数据库已无其他程序占用；重复运行会覆盖输出目录下的同名图层。" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</controls:ProWindow>

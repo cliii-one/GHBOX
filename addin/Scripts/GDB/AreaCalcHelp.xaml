@@ -1,0 +1,39 @@
+<controls:ProWindow x:Class="GHBoxAddIn.Scripts.GDB.AreaCalcHelp"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+        mc:Ignorable="d"
+        Title="面积重算 - 使用说明" Height="560" Width="680"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="16">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="面积重算工具" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" />
+
+                <TextBlock Text="一、工具用途" FontSize="14" FontWeight="Bold" Margin="0,8,0,4" />
+                <TextBlock TextWrapping="Wrap" Margin="8,0,0,4"
+                           Text="按椭球面积（测地线面积）重算所选图层各要素的面积并写入指定面积字段，支持一次选择多个图层批量计算。椭球面积为国土行业（三调、规划汇交）标准口径。" />
+
+                <TextBlock Text="二、参数说明" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 输入数据库：浏览选择 .gdb 后自动列出全部图层。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 选择图层：列表可多选（Ctrl 单选、Shift 连选），全部选中图层按名称顺序依次计算。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 面积字段：只列出双精度或浮点型字段（多图层时只显示各图层共有字段）；默认选中 MJ、MJA、Shape_Area 中第一个存在的。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="4. 面积单位：平方米 / 公顷 / 平方公里 / 亩 / 万亩。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="5. 小数位数：不保留（写入原始值）/ 保留 2 位小数 / 保留 4 位小数；对换算后的面积值四舍五入。" TextWrapping="Wrap" />
+
+                <TextBlock Text="三、计算口径与换算" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="· 面积口径：椭球面积（测地线），按要素坐标系基准椭球归算，投影坐标系图层同样适用，与 Pro「计算几何属性-测地线面积」一致。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="· 换算关系（以平方米为基准）：1 公顷 = 10000 m²；1 平方公里 = 1000000 m²；1 亩 = 2000/3 m² ≈ 666.67 m²；1 万亩 = 10000 亩。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="· 示例：10000 m² = 1 公顷 = 0.01 平方公里 = 15 亩 = 0.0015 万亩。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="· 小数位处理：先按单位换算，再四舍五入到指定小数位（如选 2 位，则 123.456 → 123.46）。" TextWrapping="Wrap" />
+
+                <TextBlock Text="四、容错机制" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 空几何要素：跳过不写值，日志单独计数提示。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 单图层写入失败：该图层整体回滚（不留半成品），继续处理下一个图层。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 计算结果会覆盖面积字段原有值，请确认字段无误（建议先备份）。" TextWrapping="Wrap" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</controls:ProWindow>

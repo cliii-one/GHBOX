@@ -1,0 +1,49 @@
+<controls:ProWindow x:Class="GHBoxAddIn.Scripts.GDB.DbCompareHelp"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+        mc:Ignorable="d"
+        Title="数据库比对 - 使用说明" Height="600" Width="700"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="16">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="数据库比对工具" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" />
+
+                <TextBlock Text="一、工具用途" FontSize="14" FontWeight="Bold" Margin="0,8,0,4" />
+                <TextBlock TextWrapping="Wrap" Margin="8,0,0,4"
+                           Text="比对同一数据库的两个版本（A 库与 B 库），快速判断是否一致并定位全部差异：图层名称、图层范围、图斑几何、图斑属性，差异图斑可输出到结果库在地图中核查。" />
+
+                <TextBlock Text="二、参数说明" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. A 版本数据库 / B 版本数据库：要比对的两个 .gdb（不能相同）。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 要比对的图层名：多个用英文逗号分隔（如 DLTB,XZQ）；留空 = 自动比对两库共有的全部图层。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 标识字段：图斑唯一标识（默认 BSM），按其值将 A、B 两库的图斑一一配对；字段在任一库不存在时该图层记为“无法比对”。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="4. 差异图斑输出数据库：已存在的 .gdb；不填则只看日志与报告，不落库。" TextWrapping="Wrap" />
+
+                <TextBlock Text="三、比对规则" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 图层名称：两库图层名集合对比，列出 A 独有 / B 独有 / 共有。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 图层范围：两图层外包矩形四角坐标差不超过容差即视为一致。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 图斑配对：按标识字段值配对；未配对成功的分“A库独有 / B库独有”。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="4. 图斑几何：类型 → 部件数 → 顶点数 → 逐顶点 XY 容差比较，任一不符即“几何不一致”。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="5. 图斑属性：先比字段名集合（A多/B多），再逐图斑逐字段比值；OBJECTID、GlobalID、Shape 等系统字段不参与。" TextWrapping="Wrap" />
+
+                <TextBlock Text="四、容差如何确定（自动，无需手填）" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" TextWrapping="Wrap"
+                           Text="按当前图层坐标系自动确定：取图层空间参考的 XY 分辨率 × 100（与 ArcGIS 聚类容差同量级，可屏蔽浮点存储微差）。地理坐标系（单位：度）与投影坐标系（单位：米）自动分别处理，无需换算。比对结论与报告中会说明所用的坐标系与容差值；两库坐标系不一致时结论会明确标注“仅供参考”。" />
+
+                <TextBlock Text="五、输出" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 窗口日志：实时显示比对过程与差异摘要。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. Excel 报告（三张表）：输出库同级目录“数据库比对报告_时间戳.xlsx”——“比对汇总”表（库信息+图层集合+结论）、“图层明细”表（每图层一行的全维度比对数字，表头可筛选）、“差异图斑清单”表（每差异图斑一行：图层/类型/标识/OID/差异字段）。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 差异图斑（指定输出库时）：每图层生成 差异_A库独有图斑_ / 差异_B库独有图斑_ / 差异_几何不一致_ / 差异_属性不一致_ 四类结果要素类，可在 Pro 中加载定位核查；重复运行会自动覆盖旧结果。" TextWrapping="Wrap" />
+
+                <TextBlock Text="六、注意事项" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 仅支持 .gdb（差异落库需要新 API 写入；.mdb 不支持）。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 图层范围是“外包矩形”粗筛指标：四角一致不代表内部一致（例如中间增删了图斑但未触及边界），内部差异由图斑级几何比对逐顶点兜底，不会漏报。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 属性比较中 NULL 与空串视为相等；数值按文本形式比较。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="4. 标识值重复时后者覆盖前者并在日志提示重复数量。" TextWrapping="Wrap" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</controls:ProWindow>

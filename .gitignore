@@ -1,0 +1,18 @@
+# ============ 构建产物（CI 自己构建，本地产物不入库） ============
+addin/bin/
+addin/obj/
+addin/dist/
+
+# ============ .NET / NuGet ============
+*.user
+*.suo
+*.sln.docstates
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+
+# ============ 常规 ============
+*.log
+.DS_Store
+Thumbs.db
+Desktop.ini

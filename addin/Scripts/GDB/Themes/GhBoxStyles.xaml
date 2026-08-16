@@ -1,0 +1,258 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- ================================================================
+         GHBOX 工具窗口统一样式（Pro 原生风精修版）
+         设计原则：
+         1. 颜色全部引用 Pro 主题动态资源（EsriColors / Esri Brush keys），
+            明暗主题自动适配，不硬编码背景色
+         2. 仅强调色（主按钮）使用 Esri 品牌蓝，与 Pro 主界面一致
+         3. 控件圆角、间距、悬停反馈统一，全局一次引入即可生效
+         用法：各窗口 ProWindow.Resources 合并本字典
+              <controls:ProWindow.Resources>
+                <ResourceDictionary Source="pack://application:,,,/GHBoxAddIn;component/Scripts/GDB/Themes/GhBoxStyles.xaml" />
+              </controls:ProWindow.Resources>
+         ================================================================ -->
+
+    <!-- ============ 分区标题（工具名 + 灰色说明） ============ -->
+    <Style x:Key="GhTitleText" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Margin" Value="0,0,0,2" />
+        <Setter Property="Foreground" Value="{DynamicResource Esri_Blue}" />
+    </Style>
+
+    <Style x:Key="GhSubTitleText" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="{DynamicResource Esri_Gray110}" />
+        <Setter Property="Margin" Value="0,0,0,8" />
+    </Style>
+
+    <!-- ============ 表单标签（统一右对齐节奏） ============ -->
+    <Style x:Key="GhLabel" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="{DynamicResource Esri_Gray145}" />
+        <Setter Property="Margin" Value="0,0,6,0" />
+    </Style>
+
+    <!-- ============ 输入框：细描边 + 聚焦高亮 ============ -->
+    <Style x:Key="GhTextBox" TargetType="TextBox">
+        <Setter Property="Height" Value="26" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Padding" Value="4,0" />
+        <Setter Property="Background" Value="{DynamicResource Esri_ControlBackgroundColor}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Esri_BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Foreground" Value="{DynamicResource Esri_TextControlBrush}" />
+        <Setter Property="CaretBrush" Value="{DynamicResource Esri_TextControlBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border x:Name="bd" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="3">
+                        <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"
+                                      VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Esri_Blue}" />
+                            <Setter TargetName="bd" Property="BorderThickness" Value="1.5" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="bd" Property="Opacity" Value="0.5" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ 下拉框：统一高度圆角 ============ -->
+    <Style x:Key="GhComboBox" TargetType="ComboBox">
+        <Setter Property="Height" Value="26" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Background" Value="{DynamicResource Esri_ControlBackgroundColor}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Esri_BorderBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource Esri_TextControlBrush}" />
+    </Style>
+
+    <!-- ============ 列表框：细描边圆角（图层多选） ============ -->
+    <Style x:Key="GhListBox" TargetType="ListBox">
+        <Setter Property="BorderBrush" Value="{DynamicResource Esri_BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Background" Value="{DynamicResource Esri_ControlBackgroundColor}" />
+        <Setter Property="Foreground" Value="{DynamicResource Esri_TextControlBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBox">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="3">
+                        <ScrollViewer Padding="2">
+                            <ItemsPresenter />
+                        </ScrollViewer>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemContainerStyle">
+            <Setter.Value>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="Padding" Value="4,2" />
+                    <Setter Property="Foreground" Value="{DynamicResource Esri_TextControlBrush}" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <Border x:Name="bd" Background="Transparent" CornerRadius="2"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter />
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bd" Property="Background"
+                                                Value="{DynamicResource Esri_ControlHighlightBrush}" />
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter TargetName="bd" Property="Background"
+                                                Value="{DynamicResource Esri_ControlHighlightBrush}" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ 次要按钮（浏览/取消/说明）：描边幽灵按钮 ============ -->
+    <Style x:Key="GhGhostButton" TargetType="Button">
+        <Setter Property="Height" Value="26" />
+        <Setter Property="Padding" Value="10,0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource Esri_Blue}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" Background="{TemplateBinding Background}"
+                            BorderBrush="{DynamicResource Esri_Blue}" BorderThickness="1"
+                            CornerRadius="3">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background"
+                                    Value="{DynamicResource Esri_Blue}" />
+                            <Setter Property="Foreground" Value="White" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="bd" Property="Opacity" Value="0.8" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ 主按钮（开始××）：品牌蓝实心 ============ -->
+    <Style x:Key="GhPrimaryButton" TargetType="Button" BasedOn="{StaticResource GhGhostButton}">
+        <Setter Property="Height" Value="28" />
+        <Setter Property="Padding" Value="16,0" />
+        <Setter Property="Background" Value="{DynamicResource Esri_Blue}" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding Background}" BorderThickness="1"
+                            CornerRadius="3">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Opacity" Value="0.88" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="bd" Property="Opacity" Value="0.72" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ 进度条：圆角 + 品牌蓝填充 ============ -->
+    <Style x:Key="GhProgress" TargetType="ProgressBar">
+        <Setter Property="Height" Value="10" />
+        <Setter Property="Foreground" Value="{DynamicResource Esri_Blue}" />
+        <Setter Property="Background" Value="{DynamicResource Esri_ControlBackgroundColor}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ProgressBar">
+                    <Grid>
+                        <Border Background="{TemplateBinding Background}" CornerRadius="5" />
+                        <Border x:Name="PART_Track" />
+                        <Border x:Name="PART_Indicator" Background="{TemplateBinding Foreground}"
+                                CornerRadius="5" HorizontalAlignment="Left" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ 日志区：等宽字体控制台风 ============ -->
+    <Style x:Key="GhLogBox" TargetType="TextBox">
+        <Setter Property="IsReadOnly" Value="True" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+        <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+        <Setter Property="FontFamily" Value="Consolas, Microsoft YaHei UI" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Padding" Value="6,4" />
+        <Setter Property="Background" Value="{DynamicResource Esri_ControlBackgroundColor}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Esri_BorderBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource Esri_TextControlBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1" CornerRadius="3">
+                        <ScrollViewer x:Name="PART_ContentHost" Padding="{TemplateBinding Padding}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ 提示条（灰底说明/预览） ============ -->
+    <Style x:Key="GhHintBorder" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource Esri_ControlBackgroundColor}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Esri_BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Padding" Value="8,5" />
+    </Style>
+
+    <Style x:Key="GhHintText" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource Esri_Gray145}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
+</ResourceDictionary>

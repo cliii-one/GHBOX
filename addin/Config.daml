@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ArcGIS defaultAssembly="GHBoxAddIn.dll" defaultNamespace="GHBoxAddIn" xmlns="http://schemas.esri.com/DADF/Registry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///D:/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
+  <AddInInfo id="{6791b809-48ed-4d84-936f-46c0db7dd0ce}" version="1.0" desktopVersion="3.6">
+    <Name>规划盒子</Name>
+    <Description>规划盒子：面向国土空间规划数据库的批处理工具集，提供数据库合并、拆分、比对、唯一编码、面积重算等处理能力，以及弧线段、尖锐角等入库前质量检查。</Description>
+    <!-- 工具箱级图标：显示在"加载项"管理列表中（Images\GHBox32.png 由 build_all.ps1 复制进包） -->
+    <Image>Images\GHBox32.png</Image>
+    <Author>叁零捌</Author>
+    <Company>叁零捌</Company>
+    <Date>2026/8/14</Date>
+    <Subject>Framework</Subject>
+    <AddIn language="NET" library="GHBoxAddIn.dll" namespace="GHBoxAddIn"/>
+  </AddInInfo>
+  <modules>
+    <insertModule id="GHBoxAddIn_Module" className="Module1" autoLoad="true" caption="规划盒子">
+      <tabs>
+        <tab id="GHBoxAddIn_Tab" caption="规划盒子" keytip="GH">
+          <group refID="GHBoxAddIn_Group_GDB" />
+          <group refID="GHBoxAddIn_Group_Check" />
+        </tab>
+      </tabs>
+      <groups>
+        <!-- appearsOnAddInTab=false：不额外出现在 Pro 自带的"加载项"选项卡，避免菜单重复 -->
+        <group id="GHBoxAddIn_Group_GDB" caption="数据库处理" appearsOnAddInTab="false">
+          <button refID="GHBoxAddIn_GDB_Merge" size="large" />
+          <button refID="GHBoxAddIn_GDB_Split" size="large" />
+          <button refID="GHBoxAddIn_GDB_UniqueCode" size="large" />
+          <button refID="GHBoxAddIn_GDB_AreaCalc" size="large" />
+          <button refID="GHBoxAddIn_GDB_Delete" size="large" />
+          <button refID="GHBoxAddIn_GDB_Compare" size="large" />
+        </group>
+        <!-- 数据库检查：面向入库前质量检查（弧线段/尖锐角等），与"数据库处理"分组并列 -->
+        <group id="GHBoxAddIn_Group_Check" caption="数据库检查" appearsOnAddInTab="false">
+          <button refID="GHBoxAddIn_Check_Arc" size="large" />
+          <button refID="GHBoxAddIn_Check_Angle" size="large" />
+        </group>
+      </groups>
+      <controls>
+        <!-- 数据库合并：使用 Pro 官方 GP「Merge」工具图标，直观表达"多合为一" -->
+        <button id="GHBoxAddIn_GDB_Merge"
+                caption="数据库合并"
+                className="GHBoxAddIn.Scripts.GDB.ShowLayerMerge"
+                loadOnClick="true"
+                keytip="LM"
+                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GeoprocessingTool_Merge_management16.png"
+                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GeoprocessingTool_Merge_management.png">
+          <tooltip heading="数据库合并">
+            将多个 GDB/MDB 中的同名图层合并到一个输出数据库，支持指定图层名或 ALL，逐图层容错并核对条数。
+            <disabledText />
+          </tooltip>
+        </button>
+        <!-- 数据库合并帮助窗口由对话框内部按钮打开，不单独注册功能区按钮 -->
+
+        <!-- 数据库拆分：SharingSplitLayer（一个图层拆分为多份），语义贴合"总库拆多县库"；
+             注意 Pro 资源库无 GeoprocessingTool_Split 图标，勿凭记忆猜资源名 -->
+        <button id="GHBoxAddIn_GDB_Split"
+                caption="数据库拆分"
+                className="GHBoxAddIn.Scripts.GDB.ShowDbSplit"
+                loadOnClick="true"
+                keytip="LS"
+                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/SharingSplitLayer16.png"
+                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/SharingSplitLayer32.png">
+          <tooltip heading="数据库拆分">
+            按 XDM 县代码与 XMC 县名称将省级数据库拆分为县级独立 GDB，图层命名支持原名或县名前缀两种格式。
+            <disabledText />
+          </tooltip>
+        </button>
+
+        <!-- 唯一编码：TableCalculateField（字段计算），已实测存在于 Pro 资源库 -->
+        <button id="GHBoxAddIn_GDB_UniqueCode"
+                caption="唯一编码"
+                className="GHBoxAddIn.Scripts.GDB.ShowUniqueCode"
+                loadOnClick="true"
+                keytip="LU"
+                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/TableCalculateField16.png"
+                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/TableCalculateField32.png">
+          <tooltip heading="唯一编码">
+            按顺序给所选图层（可多选批量）写入唯一编码：编码开头 + 序号左补零至编码总长度，支持每图层独立或跨图层连续编号。
+            <disabledText />
+          </tooltip>
+        </button>
+
+        <!-- 面积重算：MeasureArea（测量面积），已实测存在于 Pro 资源库 -->
+        <button id="GHBoxAddIn_GDB_AreaCalc"
+                caption="面积重算"
+                className="GHBoxAddIn.Scripts.GDB.ShowAreaCalc"
+                loadOnClick="true"
+                keytip="LA"
+                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/MeasureArea16.png"
+                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/MeasureArea32.png">
+          <tooltip heading="面积重算">
+            按椭球面积（测地线）重算所选图层（可多选批量）的要素面积并写入双精度/浮点字段，单位支持平方米/公顷/平方公里/亩/万亩。
+            <disabledText />
+          </tooltip>
+        </button>
+
+        <!-- 删除图层：使用 Pro 内置「删除图层」图标 -->
+        <button id="GHBoxAddIn_GDB_Delete"
+                caption="删除图层"
+                className="GHBoxAddIn.Scripts.GDB.ShowLayerDelete"
+                loadOnClick="true"
+                keytip="LD"
+                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/LayerTreeDelete16.png"
+                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/LayerTreeDelete32.png">
+          <tooltip heading="删除图层">
+            遍历根文件夹下所有 GDB/MDB，批量删除或保留指定图层，可选清理空数据集，逐库容错并输出统计。
+            <disabledText />
+          </tooltip>
+        </button>
+
+        <!-- 数据库比对：使用 Pro 官方「比较区域」图标 -->
+        <button id="GHBoxAddIn_GDB_Compare"
+                caption="数据库比对"
+                className="GHBoxAddIn.Scripts.GDB.ShowDbCompare"
+                loadOnClick="true"
+                keytip="LC"
+                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/CompareAreas16.png"
+                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/CompareAreas32.png">
+          <tooltip heading="数据库比对">
+            比对两个版本数据库（A/B）的图层名称、图层范围、图斑几何与属性差异，容差按坐标系自动确定，差异图斑可输出到结果库核查。
+            <disabledText />
+          </tooltip>
+        </button>
+
+        <!-- ===== 数据库检查分组 ===== -->
+
+        <!-- 查找弧线段：自绘图标（Pro 资源库无弧线语义图标，见 make_icons.ps1） -->
+        <button id="GHBoxAddIn_Check_Arc"
+                caption="查找弧线段"
+                className="GHBoxAddIn.Scripts.Check.ShowSearchArc"
+                loadOnClick="true"
+                keytip="CA"
+                smallImage="pack://application:,,,/GHBoxAddIn;component/Images/SearchArc16.png"
+                largeImage="pack://application:,,,/GHBoxAddIn;component/Images/SearchArc32.png">
+          <tooltip heading="查找弧线段">
+            检查所选图层（可多选批量）要素几何中的圆弧/椭圆弧线段（含贝塞尔曲线），逐段输出为独立线要素并记录所属 OBJECTID，便于入库前定位清除。
+            <disabledText />
+          </tooltip>
+        </button>
+
+        <!-- 查找尖锐角：自绘图标（Pro 资源库无锐角语义图标，见 make_icons.ps1） -->
+        <button id="GHBoxAddIn_Check_Angle"
+                caption="查找尖锐角"
+                className="GHBoxAddIn.Scripts.Check.ShowFindAngle"
+                loadOnClick="true"
+                keytip="CN"
+                smallImage="pack://application:,,,/GHBoxAddIn;component/Images/FindAngle16.png"
+                largeImage="pack://application:,,,/GHBoxAddIn;component/Images/FindAngle32.png">
+          <tooltip heading="查找尖锐角">
+            检查所选图层（可多选批量）要素几何中的尖锐角顶点（夹角小于阈值，默认 10°），输出为点要素并记录角度与坐标，用于入库前拓扑质量检查。
+            <disabledText />
+          </tooltip>
+        </button>
+      </controls>
+    </insertModule>
+  </modules>
+</ArcGIS>

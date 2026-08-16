@@ -1,0 +1,86 @@
+<controls:ProWindow x:Class="GHBoxAddIn.Scripts.GDB.DbSplit"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+        mc:Ignorable="d"
+        Title="数据库拆分" Height="560" Width="640"
+        WindowStartupLocation="CenterScreen">
+    <controls:ProWindow.Resources>
+        <ResourceDictionary Source="pack://application:,,,/GHBoxAddIn;component/Scripts/GDB/Themes/GhBoxStyles.xaml" />
+    </controls:ProWindow.Resources>
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 输入数据库 -->
+        <TextBlock Grid.Row="0" Style="{StaticResource GhLabel}"
+                   Text="输入省级数据库（.gdb，按 XDM 县代码 + XMC 县名称拆分）：" Margin="0,0,0,4" />
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="TextInputGdb" Style="{StaticResource GhTextBox}" />
+            <Button Grid.Column="1" Content="浏览..." Style="{StaticResource GhGhostButton}"
+                    Margin="6,0,0,0" Click="BrowseInput_Click" />
+        </Grid>
+
+        <!-- 输出根文件夹 -->
+        <TextBlock Grid.Row="2" Style="{StaticResource GhLabel}"
+                   Text="输出根文件夹（各县数据库创建在此目录下）：" Margin="0,10,0,4" />
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="TextOutputFolder" Style="{StaticResource GhTextBox}" />
+            <Button Grid.Column="1" Content="浏览..." Style="{StaticResource GhGhostButton}"
+                    Margin="6,0,0,0" Click="BrowseFolder_Click" />
+        </Grid>
+
+        <!-- 图层名前缀 -->
+        <TextBlock Grid.Row="4" Style="{StaticResource GhLabel}"
+                   Text="原图层名前缀（仅格式②生效，需移除的部分，可空）：" Margin="0,10,0,4" />
+        <TextBox Grid.Row="5" x:Name="TextPrefix" Style="{StaticResource GhTextBox}"
+                 ToolTip="示例：原图层名“湖北省zqcsfw”填“湖北省”后，图层名称基础部分变为 zqcsfw" />
+
+        <!-- 命名格式 -->
+        <StackPanel Grid.Row="6" Orientation="Horizontal" Margin="0,10,0,0">
+            <RadioButton x:Name="RadioKeepOriginal" Content="① 与原始图层名称保持一致" Margin="0,0,16,0"
+                         Foreground="{DynamicResource Esri_TextControlBrush}" />
+            <RadioButton x:Name="RadioCountyPrefix" Content="② 县名称 + 移除前缀后的图层名" IsChecked="True"
+                         Foreground="{DynamicResource Esri_TextControlBrush}" />
+        </StackPanel>
+
+        <!-- 进度与日志 -->
+        <Grid Grid.Row="7" Margin="0,10,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <ProgressBar x:Name="Progress" Style="{StaticResource GhProgress}" Minimum="0" Maximum="100" />
+            <TextBox x:Name="TextLog" Grid.Row="1" Style="{StaticResource GhLogBox}" Margin="0,8,0,0" />
+        </Grid>
+
+        <!-- 操作按钮 -->
+        <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button x:Name="BtnHelp" Content="使用说明" Style="{StaticResource GhGhostButton}" Margin="0,0,8,0"
+                    Click="HelpButton_Click" />
+            <Button x:Name="BtnCancel" Content="取消" Style="{StaticResource GhGhostButton}" Margin="0,0,8,0"
+                    IsEnabled="False" Click="CancelButton_Click" />
+            <Button x:Name="BtnRun" Content="开始拆分" Style="{StaticResource GhPrimaryButton}"
+                    Click="RunButton_Click" />
+        </StackPanel>
+    </Grid>
+</controls:ProWindow>

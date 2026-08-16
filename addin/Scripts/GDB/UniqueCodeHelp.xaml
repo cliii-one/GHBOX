@@ -1,0 +1,44 @@
+<controls:ProWindow x:Class="GHBoxAddIn.Scripts.GDB.UniqueCodeHelp"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+        mc:Ignorable="d"
+        Title="唯一编码 - 使用说明" Height="580" Width="680"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="16">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="唯一编码工具" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" />
+
+                <TextBlock Text="一、工具用途" FontSize="14" FontWeight="Bold" Margin="0,8,0,4" />
+                <TextBlock TextWrapping="Wrap" Margin="8,0,0,4"
+                           Text="按顺序给所选图层的要素写入唯一编码（标识码）。编码 = 编码开头 + 序号，序号左补零至总长度。支持一次选择多个图层批量编码。" />
+
+                <TextBlock Text="二、参数说明" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 输入数据库：浏览选择 .gdb 后自动列出全部图层。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 选择图层：列表可多选（Ctrl 单选、Shift 连选），全部选中图层按名称顺序依次编码。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 编码字段：下拉选择，自动列出所选图层的公共可写字段（文本或整型）；多图层时只显示各图层共有的字段；默认选中 BSM。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="4. 编码长度：编码总位数，如 18。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="5. 编码开头：编码前缀，如 4201232026（行政区+年份）。序号位数 = 编码长度 − 开头长度。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="6. 编码起始值：序号从此值开始递增，如 100。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="7. 编号方式：" TextWrapping="Wrap" />
+                <TextBlock Margin="16,0,0,2" Text="· 每图层独立编号：各图层都从起始值重新开始（各图层编码可重复前段）；" TextWrapping="Wrap" />
+                <TextBlock Margin="16,0,0,2" Text="· 跨图层连续编号：起始值在所有图层间连续递增（全局唯一）。" TextWrapping="Wrap" />
+
+                <TextBlock Text="三、编码规则（示例）" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" TextWrapping="Wrap"
+                           Text="输入图层：城镇开发边界；编码字段：BSM；编码长度：18；编码开头：4201232026；起始值：100 → 首码 420123202600000100，其后 420123202600000101、420123202600000102 ……" />
+                <TextBlock Margin="8,0,0,2" Text="编码顺序：按图层内要素 OBJECTID 升序，结果稳定可复现。" TextWrapping="Wrap" />
+
+                <TextBlock Text="四、校验与容错" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 编码开头必须为数字；开头长度必须小于编码长度（至少留 1 位序号）。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 起始值 + 要素总数 − 1 不得超过序号容量（如 8 位序号最大 99999999），否则该图层跳过并提示。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 文本字段长度不足、整型字段位数超限（普通整型约 9 位）时开始前即报错。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="4. 单图层写入失败：该图层整体回滚（不留半编码），继续处理下一个图层。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="5. 编码会覆盖字段原有值，请确认字段无误（建议先备份）。" TextWrapping="Wrap" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</controls:ProWindow>

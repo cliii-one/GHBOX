@@ -1,0 +1,102 @@
+<controls:ProWindow x:Class="GHBoxAddIn.Scripts.GDB.DbCompare"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+        mc:Ignorable="d"
+        Title="数据库比对" Height="600" Width="640"
+        WindowStartupLocation="CenterScreen">
+    <controls:ProWindow.Resources>
+        <ResourceDictionary Source="pack://application:,,,/GHBoxAddIn;component/Scripts/GDB/Themes/GhBoxStyles.xaml" />
+    </controls:ProWindow.Resources>
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- A库 -->
+        <TextBlock Grid.Row="0" Style="{StaticResource GhLabel}" Text="A 版本数据库（.gdb）：" Margin="0,0,0,4" />
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="TextGdbA" Style="{StaticResource GhTextBox}" />
+            <Button Grid.Column="1" Content="浏览..." Style="{StaticResource GhGhostButton}"
+                    Margin="6,0,0,0" Click="BrowseGdbA_Click" />
+        </Grid>
+
+        <!-- B库 -->
+        <TextBlock Grid.Row="2" Style="{StaticResource GhLabel}" Text="B 版本数据库（.gdb）：" Margin="0,10,0,4" />
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="TextGdbB" Style="{StaticResource GhTextBox}" />
+            <Button Grid.Column="1" Content="浏览..." Style="{StaticResource GhGhostButton}"
+                    Margin="6,0,0,0" Click="BrowseGdbB_Click" />
+        </Grid>
+
+        <!-- 图层名（可空=全库共有图层）+ 标识字段 -->
+        <TextBlock Grid.Row="4" Style="{StaticResource GhLabel}"
+                   Text="要比对的图层名（多个用英文逗号分隔；留空 = 比对两库共有全部图层）：" Margin="0,10,0,4" />
+        <Grid Grid.Row="5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="TextLayers" Style="{StaticResource GhTextBox}"
+                     ToolTip="示例：DLTB,XZQ；留空比对全部共有图层" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="6,0,0,0">
+                <TextBlock Style="{StaticResource GhLabel}" Text="标识字段：" />
+                <TextBox x:Name="TextIdField" Text="BSM" Width="80"
+                         Style="{StaticResource GhTextBox}"
+                         ToolTip="图斑唯一标识字段，按其值配对两库图斑" />
+            </StackPanel>
+        </Grid>
+
+        <!-- 输出库（与 A/B 库行完全同构：TextBox* + Button Auto） -->
+        <TextBlock Grid.Row="6" Style="{StaticResource GhLabel}"
+                   Text="差异图斑输出数据库（已存在的 .gdb；留空则不落库，报告存 A 库同级目录）：" Margin="0,10,0,4" />
+        <Grid Grid.Row="7">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="TextOutputGdb" Style="{StaticResource GhTextBox}" />
+            <Button Grid.Column="1" Content="浏览..." Style="{StaticResource GhGhostButton}"
+                    Margin="6,0,0,0" Click="BrowseOutput_Click" />
+        </Grid>
+
+        <!-- 进度与日志 -->
+        <Grid Grid.Row="8" Margin="0,10,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <ProgressBar x:Name="Progress" Style="{StaticResource GhProgress}" Minimum="0" Maximum="100" />
+            <TextBox x:Name="TextLog" Grid.Row="1" Style="{StaticResource GhLogBox}" Margin="0,8,0,0" />
+        </Grid>
+
+        <!-- 操作按钮 -->
+        <StackPanel Grid.Row="9" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button x:Name="BtnHelp" Content="使用说明" Style="{StaticResource GhGhostButton}" Margin="0,0,8,0"
+                    Click="HelpButton_Click" />
+            <Button x:Name="BtnCancel" Content="取消" Style="{StaticResource GhGhostButton}" Margin="0,0,8,0"
+                    IsEnabled="False" Click="CancelButton_Click" />
+            <Button x:Name="BtnRun" Content="开始比对" Style="{StaticResource GhPrimaryButton}"
+                    Click="RunButton_Click" />
+        </StackPanel>
+    </Grid>
+</controls:ProWindow>

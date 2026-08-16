@@ -1,0 +1,36 @@
+<controls:ProWindow x:Class="GHBoxAddIn.Scripts.Check.SearchArcHelp"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+        mc:Ignorable="d"
+        Title="查找弧线段 - 使用说明" Height="500" Width="680"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="16">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="查找弧线段工具" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" />
+
+                <TextBlock Text="一、工具用途" FontSize="14" FontWeight="Bold" Margin="0,8,0,4" />
+                <TextBlock TextWrapping="Wrap" Margin="8,0,0,4"
+                           Text="检查所选图层要素几何中的曲线段（圆弧/椭圆弧 + 贝塞尔曲线），用于入库前质量检查。国土数据库要求折线存储，曲线段需先定位再 densify 处理。" />
+
+                <TextBlock Text="二、参数说明" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 输入数据库：浏览选择 .gdb 后自动列出全部图层。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 选择图层：列表可多选（Ctrl 单选、Shift 连选），按名称顺序逐图层检查。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 结果输出数据库：已存在的 .gdb；留空则仅统计数量不落库。" TextWrapping="Wrap" />
+
+                <TextBlock Text="三、检查规则与输出" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="· 检测依据：几何段类型为圆弧/椭圆弧（EllipticArc）或贝塞尔（Bezier）即命中；直线段不报。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="· 落库结果：每图层一个线要素类「弧线段_图层名」，每个曲线段一条线要素，字段含 来源OBJECTID（可定位原图斑）与 段类型。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="· 重复运行自动覆盖旧结果（结果要素类先删后建）。" TextWrapping="Wrap" />
+
+                <TextBlock Text="四、容错机制" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 空几何/点要素自动跳过。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 单图层检查失败：记录错误继续下一图层，不影响整体。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 检查不改写源数据，仅读源库、写输出库。" TextWrapping="Wrap" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</controls:ProWindow>

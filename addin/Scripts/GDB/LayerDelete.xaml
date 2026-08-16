@@ -1,0 +1,73 @@
+<controls:ProWindow x:Class="GHBoxAddIn.Scripts.GDB.LayerDelete"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+        mc:Ignorable="d"
+        Title="删除图层" Height="520" Width="640"
+        WindowStartupLocation="CenterScreen">
+    <controls:ProWindow.Resources>
+        <ResourceDictionary Source="pack://application:,,,/GHBoxAddIn;component/Scripts/GDB/Themes/GhBoxStyles.xaml" />
+    </controls:ProWindow.Resources>
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 根文件夹 -->
+        <TextBlock Grid.Row="0" Style="{StaticResource GhLabel}"
+                   Text="根文件夹（将递归处理其下所有 GDB/MDB）：" Margin="0,0,0,4" />
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="TextFolderPath" Style="{StaticResource GhTextBox}" />
+            <Button Grid.Column="1" Content="浏览..." Style="{StaticResource GhGhostButton}"
+                    Margin="6,0,0,0" Click="BrowseFolderButton_Click" />
+        </Grid>
+
+        <!-- 图层名称 -->
+        <TextBlock Grid.Row="2" Style="{StaticResource GhLabel}"
+                   Text="图层名称列表（多个用英文逗号分隔）：" Margin="0,10,0,4" />
+        <TextBox Grid.Row="3" x:Name="TextLayerNames" Style="{StaticResource GhTextBox}" />
+
+        <!-- 操作类型 + 高级选项 -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,10,0,0">
+            <RadioButton x:Name="RadioDelete" Content="删除模式（仅删除所选图层）" IsChecked="True" Margin="0,0,16,0"
+                         Foreground="{DynamicResource Esri_TextControlBrush}" />
+            <RadioButton x:Name="RadioRetain" Content="保留模式（删除其他所有图层）"
+                         Foreground="{DynamicResource Esri_TextControlBrush}" />
+        </StackPanel>
+        <CheckBox Grid.Row="5" x:Name="CheckDeleteEmptyDataset" Content="删除空数据集（图层删空后清理所属要素数据集）"
+                  Margin="0,8,0,0" Foreground="{DynamicResource Esri_TextControlBrush}" />
+
+        <!-- 进度与日志 -->
+        <Grid Grid.Row="6" Margin="0,10,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <ProgressBar x:Name="Progress" Style="{StaticResource GhProgress}" Minimum="0" Maximum="100" />
+            <TextBox x:Name="TextLog" Grid.Row="1" Style="{StaticResource GhLogBox}" Margin="0,8,0,0" />
+        </Grid>
+
+        <!-- 操作按钮 -->
+        <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button x:Name="BtnHelp" Content="使用说明" Style="{StaticResource GhGhostButton}" Margin="0,0,8,0"
+                    Click="HelpButton_Click" />
+            <Button x:Name="BtnCancel" Content="取消" Style="{StaticResource GhGhostButton}" Margin="0,0,8,0"
+                    IsEnabled="False" Click="CancelButton_Click" />
+            <Button x:Name="BtnRun" Content="开始处理" Style="{StaticResource GhPrimaryButton}"
+                    Click="RunButton_Click" />
+        </StackPanel>
+    </Grid>
+</controls:ProWindow>

@@ -1,0 +1,41 @@
+<controls:ProWindow x:Class="GHBoxAddIn.Scripts.Check.FindAngleHelp"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+        mc:Ignorable="d"
+        Title="查找尖锐角 - 使用说明" Height="520" Width="680"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="16">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="查找尖锐角工具" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" />
+
+                <TextBlock Text="一、工具用途" FontSize="14" FontWeight="Bold" Margin="0,8,0,4" />
+                <TextBlock TextWrapping="Wrap" Margin="8,0,0,4"
+                           Text="检查要素几何中的尖锐角顶点（相邻两边夹角过小的顶点，如折返的钉子角），用于入库前拓扑质量检查。" />
+
+                <TextBlock Text="二、参数说明" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 输入数据库：浏览选择 .gdb 后自动列出全部图层。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 选择图层：列表可多选（Ctrl 单选、Shift 连选），按名称顺序逐图层检查。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 角度阈值：默认 10°，取值 0~180（不含端点）；顶点内角小于该值即命中。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="4. 结果输出数据库：已存在的 .gdb；留空则仅统计数量不落库。" TextWrapping="Wrap" />
+
+                <TextBlock Text="三、判定规则" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="· 内角 = |180° − 转向角|；转向角由入边/出边方向角（atan2）差值归一化到 [0°,180°]。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="· 平直顶点内角 180° 不命中；阈值 10° 时，内角小于 10° 的顶点被标记（含凹角与凸角）。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="· 面与线均检查；面环自动闭合处理，首尾顶点同样参与判定；零长段（重合点）跳过。" TextWrapping="Wrap" />
+
+                <TextBlock Text="四、结果输出" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="· 每图层一个点要素类「尖锐角_图层名」，每个命中顶点一个点要素。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="· 字段：来源OBJECTID（定位原图斑）、夹角度数（保留 2 位）。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="· 重复运行自动覆盖旧结果（结果要素类先删后建）。" TextWrapping="Wrap" />
+
+                <TextBlock Text="五、容错机制" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 空几何自动跳过；单图层失败记录错误继续下一图层。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 检查只读源库，结果写输出库，不改动源数据。" TextWrapping="Wrap" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</controls:ProWindow>
