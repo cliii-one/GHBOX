@@ -16,3 +16,4 @@ artifacts/
 .DS_Store
 Thumbs.db
 Desktop.ini
+__pycache__/
