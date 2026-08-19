@@ -41,13 +41,16 @@ GHBOX/
 │       │   ├── DbCompare.xaml(.cs)  # 比对窗口（调度）
 │       │   ├── DbCompareCore.cs     # 比对核心逻辑（纯逻辑类，无UI）
 │       │   └── DbCompareHelp.xaml(.cs) # 数据库比对使用说明
-│       └── Check/                # 数据库检查类工具
-│           ├── ShowSearchArc.cs     # 按钮：查找弧线段
-│           ├── SearchArc.xaml(.cs)  # 窗口+业务逻辑（曲线段检测+结果落库）
-│           ├── SearchArcHelp.xaml(.cs) # 查找弧线段使用说明
-│           ├── ShowFindAngle.cs     # 按钮：查找尖锐角
-│           ├── FindAngle.xaml(.cs)  # 窗口+业务逻辑（顶点内角检测+结果落库）
-│           └── FindAngleHelp.xaml(.cs) # 查找尖锐角使用说明
+│       ├── Check/                # 数据库检查类工具
+│       │   ├── ShowSearchArc.cs     # 按钮：查找弧线段
+│       │   ├── SearchArc.xaml(.cs)  # 窗口+业务逻辑（曲线段检测+结果落库）
+│       │   ├── SearchArcHelp.xaml(.cs) # 查找弧线段使用说明
+│       │   ├── ShowFindAngle.cs     # 按钮：查找尖锐角
+│       │   ├── FindAngle.xaml(.cs)  # 窗口+业务逻辑（顶点内角检测+结果落库）
+│       │   └── FindAngleHelp.xaml(.cs) # 查找尖锐角使用说明
+│       └── Help/                 # 帮助支持类工具（无 .pyt 留档，纯网络/版本比对）
+│           ├── ShowCheckUpdate.cs    # 按钮：检查更新（单例窗口）
+│           └── CheckUpdate.xaml(.cs) # 窗口+业务逻辑（GitHub 版本比对+跳转下载页）
 └── toolbox/                 # 原始 .pyt 参考版（保留业务基准，非 AddIn 运行必需）
     ├── 数据库合并.pyt          # 对应「数据库合并」按钮的逻辑基准
     ├── 数据库拆分.pyt          # 对应「数据库拆分」按钮的逻辑基准
@@ -177,6 +180,21 @@ Pro 拒绝解压）。
 使用者双击对应版本的 `.esriAddInX` → Pro 自动弹安装确认 → 装完重启 Pro。
 无任何路径/环境依赖（包内不含硬编码路径；`Config.daml` 的 schemaLocation
 路径仅是 XML 校验提示，不影响加载）。
+
+### 5. 检查更新工具的关键坑（.NET Core + GitHub API）
+
+「检查更新」（`Scripts/Help/`）不涉 GP/ArcGIS Core，无 `.pyt` 留档，三个坑：
+
+- **浏览器跳转必须 `UseShellExecute = true`**：.NET Core（6/8/10）下直接
+  `Process.Start(url)` 抛 PlatformNotSupportedException，
+  必须 `Process.Start(new ProcessStartInfo(url) { UseShellExecute = true })`
+- **GitHub API 必须带 User-Agent**：`api.github.com/repos/{owner}/{repo}/releases/latest`
+  不带 UA 返回 403；客户端 15 秒超时，失败时提示「检查失败」而非「已是最新」
+- **版本比对用 AssemblyVersion**：仓库根 `version.txt` 是唯一来源，
+  `build_all.ps1` 以 `-p:Version=$version` 注入 DLL 版本；C# 用
+  `Assembly.GetExecutingAssembly().GetName().Version` 与 Release `tag_name`（去前导 v）
+  解析后比大小，解析失败保守按「无法识别」处理
+- 下载页固定跳 `https://github.com/cliii-one/GHBOX/releases/latest`（GitHub 自动 302 到最新版）
 
 ## 五、业务逻辑约定（与 toolbox/ 原始 .pyt 一致）
 

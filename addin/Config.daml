@@ -17,6 +17,7 @@
         <tab id="GHBoxAddIn_Tab" caption="规划盒子" keytip="GH">
           <group refID="GHBoxAddIn_Group_GDB" />
           <group refID="GHBoxAddIn_Group_Check" />
+          <group refID="GHBoxAddIn_Group_Help" />
         </tab>
       </tabs>
       <groups>
@@ -36,6 +37,10 @@
           <button refID="GHBoxAddIn_Check_Arc" size="large" />
           <button refID="GHBoxAddIn_Check_Angle" size="large" />
           <button refID="GHBoxAddIn_Check_Hole" size="large" />
+        </group>
+        <!-- 帮助支持：面向工具集使用与维护的辅助功能（检查更新等），与"数据库处理""数据库检查"并列 -->
+        <group id="GHBoxAddIn_Group_Help" caption="帮助支持" appearsOnAddInTab="false">
+          <button refID="GHBoxAddIn_Help_CheckUpdate" size="large" />
         </group>
       </groups>
       <controls>
@@ -193,6 +198,22 @@
                 largeImage="pack://application:,,,/GHBoxAddIn;component/Images/FindHole32.png">
           <tooltip heading="检查空洞">
             检查所选面图层（可多选批量）中的空洞图斑（回字形/甜甜圈，内部中空）：按融合→线→面→融合→擦除→拆单部件工具链提取，每个空洞输出为一个面要素，记录空洞面积（椭球面积·平方米），便于入库前定位清理。
+            <disabledText />
+          </tooltip>
+        </button>
+
+        <!-- ===== 帮助支持分组 ===== -->
+
+        <!-- 检查更新：自绘图标（Pro 资源库无云同步/更新语义图标，使用已入库的 Images/CheckUpdate PNG） -->
+        <button id="GHBoxAddIn_Help_CheckUpdate"
+                caption="检查更新"
+                className="GHBoxAddIn.Scripts.Help.ShowCheckUpdate"
+                loadOnClick="true"
+                keytip="HU"
+                smallImage="pack://application:,,,/GHBoxAddIn;component/Images/CheckUpdate16.png"
+                largeImage="pack://application:,,,/GHBoxAddIn;component/Images/CheckUpdate32.png">
+          <tooltip heading="检查更新">
+            比对 GitHub 仓库最新版本与本机当前安装版本；存在新版本时提示，并可一键跳转 GitHub 下载页下载更新。
             <disabledText />
           </tooltip>
         </button>

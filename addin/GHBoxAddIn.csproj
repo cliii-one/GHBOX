@@ -74,6 +74,9 @@
     <Resource Include="Images\FindAngle32.png" />
     <Resource Include="Images\FindHole16.png" />
     <Resource Include="Images\FindHole32.png" />
+    <!-- 检查更新工具的自绘图标（Pro 资源库无云同步/更新语义图标，实测枚举确认） -->
+    <Resource Include="Images\CheckUpdate16.png" />
+    <Resource Include="Images\CheckUpdate32.png" />
     <!-- 工具箱级品牌图标：AddInInfo 的 Image 标签引用包内 Images\GHBox32.png -->
     <Resource Include="Images\GHBox16.png" />
     <Resource Include="Images\GHBox32.png" />
