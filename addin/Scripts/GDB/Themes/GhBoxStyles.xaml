@@ -116,9 +116,11 @@
                                         <Setter TargetName="bd" Property="Background"
                                                 Value="{DynamicResource Esri_ControlHighlightBrush}" />
                                     </Trigger>
+                                    <!-- 选中态：品牌蓝底 + 白字，多选时一眼可辨（悬停浅灰仅作浏览反馈） -->
                                     <Trigger Property="IsSelected" Value="True">
                                         <Setter TargetName="bd" Property="Background"
-                                                Value="{DynamicResource Esri_ControlHighlightBrush}" />
+                                                Value="{DynamicResource Esri_Blue}" />
+                                        <Setter Property="Foreground" Value="White" />
                                     </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
@@ -233,7 +235,11 @@
                     <Border Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="1" CornerRadius="3">
-                        <ScrollViewer x:Name="PART_ContentHost" Padding="{TemplateBinding Padding}" />
+                        <!-- 关键：PART_ContentHost 内部就是 ScrollViewer，必须显式绑定滚动条可见性，
+                             否则上方 Setter 的 VerticalScrollBarVisibility="Auto" 不会生效（日志无法滚动） -->
+                        <ScrollViewer x:Name="PART_ContentHost" Padding="{TemplateBinding Padding}"
+                                      VerticalScrollBarVisibility="{TemplateBinding VerticalScrollBarVisibility}"
+                                      HorizontalScrollBarVisibility="{TemplateBinding HorizontalScrollBarVisibility}" />
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
@@ -253,6 +259,15 @@
         <Setter Property="Foreground" Value="{DynamicResource Esri_Gray145}" />
         <Setter Property="TextWrapping" Value="Wrap" />
         <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <!-- ============ 已选计数徽章（图层多选实时反馈，品牌蓝加粗一眼可辨） ============ -->
+    <Style x:Key="GhSelCountBadge" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource Esri_Blue}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Margin" Value="8,0,0,0" />
     </Style>
 
 </ResourceDictionary>

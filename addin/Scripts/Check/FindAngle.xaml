@@ -5,9 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
         mc:Ignorable="d"
-        Title="查找尖锐角" Height="600" Width="640"
-        WindowStartupLocation="CenterScreen"
-        SizeToContent="Height" MaxHeight="760">
+        Title="查找尖锐角" Height="680" Width="640" MinHeight="600"
+        WindowStartupLocation="CenterScreen">
     <controls:ProWindow.Resources>
         <ResourceDictionary Source="pack://application:,,,/GHBoxAddIn;component/Scripts/GDB/Themes/GhBoxStyles.xaml" />
     </controls:ProWindow.Resources>
@@ -39,10 +38,19 @@
         </Grid>
 
         <!-- 图层多选 -->
-        <TextBlock Grid.Row="2" Style="{StaticResource GhLabel}"
-                   Text="选择图层（可多选，Ctrl/Shift 批量检查）：" Margin="0,10,0,4" />
+        <Grid Grid.Row="2" Margin="0,10,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Style="{StaticResource GhLabel}"
+                       Text="选择图层（可多选，Ctrl/Shift 批量检查）：" Margin="0,0,0,4" />
+            <TextBlock Grid.Column="1" x:Name="TextSelCount" Style="{StaticResource GhSelCountBadge}"
+                       Text="已选择 0 个图层" Margin="8,0,0,4" />
+        </Grid>
         <ListBox Grid.Row="3" x:Name="ListLayers" Height="100"
-                 Style="{StaticResource GhListBox}" SelectionMode="Extended" />
+                 Style="{StaticResource GhListBox}" SelectionMode="Extended"
+                 SelectionChanged="ListLayers_SelectionChanged" />
 
         <!-- 角度阈值 -->
         <TextBlock Grid.Row="4" Style="{StaticResource GhLabel}"

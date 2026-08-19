@@ -229,6 +229,8 @@ namespace GHBoxAddIn.Scripts.GDB
 
             Log("");
             Log("县级拆分完成！");
+            // 全部县处理完毕，进度条置满（循环内最后一次进度只到 (total-1)/total）
+            SetProgress(100, "县级拆分完成");
         }
 
         // ---------------- 数据访问 ----------------

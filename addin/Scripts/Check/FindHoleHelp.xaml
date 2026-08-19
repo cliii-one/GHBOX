@@ -1,0 +1,37 @@
+<controls:ProWindow x:Class="GHBoxAddIn.Scripts.Check.FindHoleHelp"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+        mc:Ignorable="d"
+        Title="检查空洞 - 使用说明" Height="500" Width="680"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="16">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="检查空洞工具" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" />
+
+                <TextBlock Text="一、工具用途" FontSize="14" FontWeight="Bold" Margin="0,8,0,4" />
+                <TextBlock TextWrapping="Wrap" Margin="8,0,0,4"
+                           Text="检查所选面图层中的空洞图斑——即面要素内部中空的区域（回字形、甜甜圈中间的空位）。国土空间规划入库前质量检查中，空洞通常是拓扑错误或编辑残留，需定位后清理。" />
+
+                <TextBlock Text="二、参数说明" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 输入数据库：浏览选择 .gdb 后自动列出全部图层。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 选择图层：列表可多选（Ctrl 单选、Shift 连选），按名称顺序逐图层检查；点/线图层自动跳过。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 结果输出数据库：已存在的 .gdb；留空则仅统计数量不落库。" TextWrapping="Wrap" />
+
+                <TextBlock Text="三、检查规则与输出" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="· 检测依据：按「融合 → 要素转线 → 要素转面 → 融合 → 擦除」工具链提取空洞图斑（与手工处理流程一致）。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="  ① 融合面图层（结果1）：所有面合并，内部空位原样保留；② 结果1 要素转线：面边界全部转线（含空位边界）；③ 线 要素转面：所有封闭区域变独立面，空洞区域变实心面；④ 转面结果再融合（结果2）：实心面合并、空洞被填充；⑤ 结果2 擦除 结果1：差集即所有空洞图斑。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="· 落库结果：每图层一个面要素类「空洞_图层名」，每个空洞输出为一个面要素（直接框出空位），字段含 空洞面积（椭球面积·平方米，保留两位小数）。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="· 重复运行自动覆盖旧结果（结果要素类先删后建）。" TextWrapping="Wrap" />
+
+                <TextBlock Text="四、容错机制" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 空几何、点/线图层自动跳过。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 单图层检查失败：记录错误继续下一图层，不影响整体。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 检查不改写源数据，仅读源库、写输出库。" TextWrapping="Wrap" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</controls:ProWindow>

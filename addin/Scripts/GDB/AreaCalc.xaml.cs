@@ -134,6 +134,7 @@ namespace GHBoxAddIn.Scripts.GDB
         /// </summary>
         private async void ListLayers_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
+            UpdateSelectedCount();   // 先刷新计数（清列表时 _updatingField 为真也会走到这里，计数归零）
             if (_updatingField) return;
 
             var selected = ListLayers.SelectedItems?.Cast<string>().ToList() ?? new List<string>();
@@ -196,6 +197,13 @@ namespace GHBoxAddIn.Scripts.GDB
         {
             FieldType t = f.FieldType;
             return t == FieldType.Double || t == FieldType.Single;
+        }
+
+        /// <summary>更新"已选择 x 个图层"计数显示（初始化期控件未就绪时先判空）</summary>
+        private void UpdateSelectedCount()
+        {
+            if (TextSelCount == null) return;
+            TextSelCount.Text = $"已选择 {ListLayers.SelectedItems?.Count ?? 0} 个图层";
         }
 
         /// <summary>字段信息（界面下拉项）</summary>
@@ -334,6 +342,8 @@ namespace GHBoxAddIn.Scripts.GDB
             Log("");
             Log($"面积重算完成：{layers.Count} 个图层共写入 {totalFeatures} 条" +
                 (totalSkipped > 0 ? $"（跳过空几何 {totalSkipped} 条）" : "") + "。");
+            // 全部图层处理完毕，进度条置满（循环内最后一次进度只到 (N-1)/N）
+            SetProgress(100, "面积重算完成");
         }
 
         /// <summary>

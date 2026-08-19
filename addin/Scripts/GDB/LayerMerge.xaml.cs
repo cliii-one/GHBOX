@@ -207,6 +207,8 @@ namespace GHBoxAddIn.Scripts.GDB
                 Log($"异常日志已保存至：{_exceptionLogPath}");
             }
             Log("数据库合并执行完成。");
+            // 全部图层处理完毕，进度条置满（循环内最后一次进度只到 (N-1)/N）
+            SetProgress(100, "数据库合并执行完成");
         }
 
         /// <summary>

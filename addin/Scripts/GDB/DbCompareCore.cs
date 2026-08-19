@@ -133,6 +133,7 @@ namespace GHBoxAddIn.Scripts.GDB
             {
                 LogWarning("没有可比对的图层。");
                 WriteExcelReport(gdbA, gdbB, idField, outputGdb);
+                Report(100, "比对完成");
                 return;
             }
             Log($"开始逐图层比对，共 {targets.Count} 个：{string.Join("、", targets)}");
@@ -152,6 +153,8 @@ namespace GHBoxAddIn.Scripts.GDB
             // ---- 5. 汇总与 Excel 报告 ----
             Report(96, "生成 Excel 报告...");
             WriteExcelReport(gdbA, gdbB, idField, outputGdb);
+            // 全部比对完成，进度条置满（循环内最后一次进度只到 5+88*(N-1)/N）
+            Report(100, "比对完成");
         }
 
         // ---------------- 图层级比对 ----------------

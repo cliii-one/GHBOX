@@ -187,6 +187,8 @@ namespace GHBoxAddIn.Scripts.GDB
                 Log("所有数据库均成功处理，未发现致命错误。");
             }
             Log("删除图层执行完成。");
+            // 全部数据库处理完毕，进度条置满（循环内最后一次进度只到 (N-1)/N）
+            SetProgress(100, "删除图层执行完成");
         }
 
         /// <summary>

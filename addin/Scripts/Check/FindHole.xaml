@@ -1,11 +1,11 @@
-<controls:ProWindow x:Class="GHBoxAddIn.Scripts.Check.SearchArc"
+<controls:ProWindow x:Class="GHBoxAddIn.Scripts.Check.FindHole"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
         mc:Ignorable="d"
-        Title="查找弧线段" Height="680" Width="640" MinHeight="600"
+        Title="检查空洞" Height="680" Width="640" MinHeight="600"
         WindowStartupLocation="CenterScreen">
     <controls:ProWindow.Resources>
         <ResourceDictionary Source="pack://application:,,,/GHBoxAddIn;component/Scripts/GDB/Themes/GhBoxStyles.xaml" />
@@ -42,7 +42,7 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBlock Style="{StaticResource GhLabel}"
-                       Text="选择图层（可多选，Ctrl/Shift 批量检查）：" Margin="0,0,0,4" />
+                       Text="选择图层（可多选，Ctrl/Shift 批量检查；点/线图层自动跳过）：" Margin="0,0,0,4" />
             <TextBlock Grid.Column="1" x:Name="TextSelCount" Style="{StaticResource GhSelCountBadge}"
                        Text="已选择 0 个图层" Margin="8,0,0,4" />
         </Grid>

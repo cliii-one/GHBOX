@@ -90,9 +90,23 @@ namespace GHBoxAddIn.Scripts.Check
             ListLayers.Items.Clear();
             foreach (string name in layers)
                 ListLayers.Items.Add(name);
+            UpdateSelectedCount(); // 清空后选区必然为空，计数归零
 
             if (layers.Count == 0)
                 MessageBox.Show("该数据库中未找到要素类。", ToolLabel);
+        }
+
+        /// <summary>选中图层变化时刷新右侧"已选择 x 个图层"计数</summary>
+        private void ListLayers_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            UpdateSelectedCount();
+        }
+
+        /// <summary>更新"已选择 x 个图层"计数显示（初始化期控件未就绪时先判空）</summary>
+        private void UpdateSelectedCount()
+        {
+            if (TextSelCount == null) return;
+            TextSelCount.Text = $"已选择 {ListLayers.SelectedItems?.Count ?? 0} 个图层";
         }
 
         private void TextAngle_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
@@ -221,6 +235,8 @@ namespace GHBoxAddIn.Scripts.Check
             Log(totalHits > 0
                 ? $"检查完成：共发现 {totalHits} 个尖锐角顶点。"
                 : "检查完成：全部图层均未发现尖锐角。");
+            // 全部图层处理完毕，进度条置满（循环内最后一次进度只到 (N-1)/N）
+            SetProgress(100, "检查完成");
         }
 
         /// <summary>命中记录：尖锐角顶点及其角度、所属要素</summary>
@@ -241,6 +257,7 @@ namespace GHBoxAddIn.Scripts.Check
             ct.ThrowIfCancellationRequested();
 
             var hits = new List<AngleHit>();
+            string srWkid = "";   // 源要素类空间参考 WKID，传给输出 FC 避免无坐标系导致几何退化/不套合
 
             await QueuedTask.Run(() =>
             {
@@ -249,6 +266,10 @@ namespace GHBoxAddIn.Scripts.Check
                     if (gdb == null) throw new InvalidOperationException("无法打开数据库。");
                     using (FeatureClass fc = gdb.OpenDataset<FeatureClass>(fcName))
                     {
+                        // 获取源要素类空间参考，供输出 FC 使用（避免输出 FC 无坐标系导致几何退化/不套合）
+                        SpatialReference sourceSr = fc.GetDefinition().GetSpatialReference();
+                        srWkid = (sourceSr != null && sourceSr.Wkid > 0) ? sourceSr.Wkid.ToString() : "";
+
                         using (RowCursor cursor = fc.Search(null, false))
                         {
                             while (cursor.MoveNext())
@@ -294,7 +315,7 @@ namespace GHBoxAddIn.Scripts.Check
             });
 
             if (outputGdb != null && hits.Count > 0)
-                await WriteHitsAsync(fcName, outputGdb, hits, ct);
+                await WriteHitsAsync(fcName, outputGdb, hits, srWkid, ct);
 
             return hits.Count;
         }
@@ -317,7 +338,7 @@ namespace GHBoxAddIn.Scripts.Check
 
         /// <summary>命中顶点写入输出库点要素类 尖锐角_{图层名}（先删后建）</summary>
         private static async Task WriteHitsAsync(
-            string fcName, string outputGdb, List<AngleHit> hits, CancellationToken ct)
+            string fcName, string outputGdb, List<AngleHit> hits, string srWkid, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
 
@@ -332,6 +353,13 @@ namespace GHBoxAddIn.Scripts.Check
             await GpHelper.RunToolAsync("management.CreateFeatureclass",
                 ArcGIS.Desktop.Core.Geoprocessing.Geoprocessing.MakeValueArray(
                     outputGdb, outName, "POINT"), ct);
+            // 关键：用 DefineProjection 给输出 FC 设置源数据坐标系，
+            //   否则输出 FC 无坐标系，写入的几何会退化为空，且加载到地图后无法与源图层套合
+            if (!string.IsNullOrEmpty(srWkid))
+            {
+                await GpHelper.RunToolAsync("management.DefineProjection",
+                    ArcGIS.Desktop.Core.Geoprocessing.Geoprocessing.MakeValueArray(outPath, srWkid), ct);
+            }
             await GpHelper.RunToolAsync("management.AddField",
                 ArcGIS.Desktop.Core.Geoprocessing.Geoprocessing.MakeValueArray(
                     outPath, "来源OBJECTID", "LONG"), ct);

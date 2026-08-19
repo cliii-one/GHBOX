@@ -100,6 +100,7 @@ namespace GHBoxAddIn.Scripts.GDB
         /// </summary>
         private async void ListLayers_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
+            UpdateSelectedCount();   // 先刷新计数（清列表时 _updatingField 为真也会走到这里，计数归零）
             if (_updatingField) return;
 
             var selected = ListLayers.SelectedItems?.Cast<string>().ToList() ?? new List<string>();
@@ -157,6 +158,13 @@ namespace GHBoxAddIn.Scripts.GDB
 
         /// <summary>字段联动请求序号（防异步过期结果覆盖新选择）</summary>
         private int _fieldRequestSeq;
+
+        /// <summary>更新"已选择 x 个图层"计数显示（初始化期控件未就绪时先判空）</summary>
+        private void UpdateSelectedCount()
+        {
+            if (TextSelCount == null) return;
+            TextSelCount.Text = $"已选择 {ListLayers.SelectedItems?.Count ?? 0} 个图层";
+        }
 
         /// <summary>可写入编码的字段：文本型或整型（双精度可能失真、OID/GlobalID 系统字段不可写）</summary>
         private static bool IsWritableCodeField(Field f)
@@ -372,6 +380,8 @@ namespace GHBoxAddIn.Scripts.GDB
 
             Log("");
             Log($"唯一编码完成：{layers.Count} 个图层共写入 {totalFeatures} 条。");
+            // 全部图层处理完毕，进度条置满（循环内最后一次进度只到 (N-1)/N）
+            SetProgress(100, "唯一编码完成");
         }
 
         /// <summary>

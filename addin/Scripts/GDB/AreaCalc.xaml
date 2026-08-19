@@ -45,10 +45,14 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource GhLabel}"
-                       Text="选择图层（可多选，Ctrl/Shift 批量选择）：" Margin="0,0,0,4" />
+            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="0,0,0,4">
+                <TextBlock Style="{StaticResource GhLabel}"
+                           Text="选择图层（可多选，Ctrl/Shift 批量选择）：" />
+                <TextBlock x:Name="TextSelCount" Style="{StaticResource GhSelCountBadge}"
+                           Text="已选择 0 个图层" />
+            </StackPanel>
             <TextBlock Grid.Row="0" Grid.Column="2" Style="{StaticResource GhLabel}"
-                       Text="面积字段（只列双精度/浮点字段）：" Margin="0,0,0,4" />
+                       Text="面积字段（只列双精度/浮点字段）：" Margin="0,0,0,4" VerticalAlignment="Center" />
             <ListBox Grid.Row="1" Grid.Column="0" x:Name="ListLayers" Height="120"
                      Style="{StaticResource GhListBox}"
                      SelectionMode="Extended"

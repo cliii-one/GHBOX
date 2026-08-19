@@ -88,9 +88,23 @@ namespace GHBoxAddIn.Scripts.Check
             ListLayers.Items.Clear();
             foreach (string name in layers)
                 ListLayers.Items.Add(name);
+            UpdateSelectedCount(); // 清空后选区必然为空，计数归零
 
             if (layers.Count == 0)
                 MessageBox.Show("该数据库中未找到要素类。", ToolLabel);
+        }
+
+        /// <summary>选中图层变化时刷新右侧"已选择 x 个图层"计数</summary>
+        private void ListLayers_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            UpdateSelectedCount();
+        }
+
+        /// <summary>更新"已选择 x 个图层"计数显示（初始化期控件未就绪时先判空）</summary>
+        private void UpdateSelectedCount()
+        {
+            if (TextSelCount == null) return;
+            TextSelCount.Text = $"已选择 {ListLayers.SelectedItems?.Count ?? 0} 个图层";
         }
 
         // ---------------- 执行 ----------------
@@ -204,6 +218,8 @@ namespace GHBoxAddIn.Scripts.Check
             Log(totalSegs > 0
                 ? $"检查完成：共发现 {totalSegs} 个曲线段。"
                 : "检查完成：全部图层均未发现曲线段。");
+            // 全部图层处理完毕，进度条置满（循环内最后一次进度只到 (N-1)/N）
+            SetProgress(100, "检查完成");
         }
 
         /// <summary>
@@ -217,6 +233,7 @@ namespace GHBoxAddIn.Scripts.Check
 
             long found = 0;
             var hits = new List<(long Oid, string SegType, Polyline Line)>();
+            string srWkid = "";   // 源要素类空间参考 WKID，传给输出 FC 避免无坐标系导致几何退化/不套合
 
             await QueuedTask.Run(() =>
             {
@@ -225,6 +242,10 @@ namespace GHBoxAddIn.Scripts.Check
                     if (gdb == null) throw new InvalidOperationException("无法打开数据库。");
                     using (FeatureClass fc = gdb.OpenDataset<FeatureClass>(fcName))
                     {
+                        // 获取源要素类空间参考，供输出 FC 使用（避免输出 FC 无坐标系导致几何退化/不套合）
+                        SpatialReference sourceSr = fc.GetDefinition().GetSpatialReference();
+                        srWkid = (sourceSr != null && sourceSr.Wkid > 0) ? sourceSr.Wkid.ToString() : "";
+
                         using (RowCursor cursor = fc.Search(null, false))
                         {
                             while (cursor.MoveNext())
@@ -267,7 +288,7 @@ namespace GHBoxAddIn.Scripts.Check
 
             // 结果落库（GP 工具链：有则先删 → CopyFeatures 创建 + Append 追加）
             if (outputGdb != null && hits.Count > 0)
-                await WriteHitsAsync(gdbPath, fcName, outputGdb, hits, ct);
+                await WriteHitsAsync(gdbPath, fcName, outputGdb, hits, srWkid, ct);
 
             return found;
         }
@@ -275,7 +296,7 @@ namespace GHBoxAddIn.Scripts.Check
         /// <summary>把命中段写入输出库（结果为内存临时 GDB 要素类再导出，字段带来源OID/段类型）</summary>
         private static async Task WriteHitsAsync(
             string gdbPath, string fcName, string outputGdb,
-            List<(long Oid, string SegType, Polyline Line)> hits, CancellationToken ct)
+            List<(long Oid, string SegType, Polyline Line)> hits, string srWkid, CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();
 
@@ -295,6 +316,13 @@ namespace GHBoxAddIn.Scripts.Check
             await GpHelper.RunToolAsync("management.CreateFeatureclass",
                 ArcGIS.Desktop.Core.Geoprocessing.Geoprocessing.MakeValueArray(
                     outputGdb, outName, "POLYLINE"), ct);
+            // 关键：用 DefineProjection 给输出 FC 设置源数据坐标系，
+            //   否则输出 FC 无坐标系，写入的几何会退化为空，且加载到地图后无法与源图层套合
+            if (!string.IsNullOrEmpty(srWkid))
+            {
+                await GpHelper.RunToolAsync("management.DefineProjection",
+                    ArcGIS.Desktop.Core.Geoprocessing.Geoprocessing.MakeValueArray(outPath, srWkid), ct);
+            }
             await GpHelper.RunToolAsync("management.AddField",
                 ArcGIS.Desktop.Core.Geoprocessing.Geoprocessing.MakeValueArray(
                     outPath, "来源OBJECTID", "LONG"), ct);

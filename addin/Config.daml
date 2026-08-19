@@ -28,11 +28,14 @@
           <button refID="GHBoxAddIn_GDB_AreaCalc" size="large" />
           <button refID="GHBoxAddIn_GDB_Delete" size="large" />
           <button refID="GHBoxAddIn_GDB_Compare" size="large" />
+          <button refID="GHBoxAddIn_GDB_AttributeExport" size="large" />
+          <button refID="GHBoxAddIn_GDB_PolygonDissolve" size="large" />
         </group>
         <!-- 数据库检查：面向入库前质量检查（弧线段/尖锐角等），与"数据库处理"分组并列 -->
         <group id="GHBoxAddIn_Group_Check" caption="数据库检查" appearsOnAddInTab="false">
           <button refID="GHBoxAddIn_Check_Arc" size="large" />
           <button refID="GHBoxAddIn_Check_Angle" size="large" />
+          <button refID="GHBoxAddIn_Check_Hole" size="large" />
         </group>
       </groups>
       <controls>
@@ -122,6 +125,34 @@
           </tooltip>
         </button>
 
+        <!-- 按属性拆库：使用 Pro 官方「导出要素」图标，体现"按条件筛选后导出"语义 -->
+        <button id="GHBoxAddIn_GDB_AttributeExport"
+                caption="按属性拆库"
+                className="GHBoxAddIn.Scripts.GDB.ShowAttributeExport"
+                loadOnClick="true"
+                keytip="LE"
+                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ExportFeatures16.png"
+                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ExportFeatures32.png">
+          <tooltip heading="按属性拆库">
+            从输入文件夹下多个 GDB/MDB 数据库中查找指定图层，按属性筛选条件批量导出为 SHP 或 GDB，单库异常自动跳过。
+            <disabledText />
+          </tooltip>
+        </button>
+
+        <!-- 按属性合并：使用 Pro 官方「融合(Dissolve)」工具图标，语义一致 -->
+        <button id="GHBoxAddIn_GDB_PolygonDissolve"
+                caption="按属性合并"
+                className="GHBoxAddIn.Scripts.GDB.ShowPolygonDissolve"
+                loadOnClick="true"
+                keytip="LP"
+                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GeoprocessingTool_Dissolve_management16.png"
+                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GeoprocessingTool_Dissolve_management.png">
+          <tooltip heading="按属性合并">
+            按指定属性字段合并相邻图斑：按字段值分组后，将小图斑向相邻的最大图斑（或公共边最长图斑）合并，支持多字段组合。
+            <disabledText />
+          </tooltip>
+        </button>
+
         <!-- ===== 数据库检查分组 ===== -->
 
         <!-- 查找弧线段：自绘图标（Pro 资源库无弧线语义图标，使用已入库的 Images/SearchArc PNG） -->
@@ -148,6 +179,20 @@
                 largeImage="pack://application:,,,/GHBoxAddIn;component/Images/FindAngle32.png">
           <tooltip heading="查找尖锐角">
             检查所选图层（可多选批量）要素几何中的尖锐角顶点（夹角小于阈值，默认 10°），输出为点要素并记录角度与坐标，用于入库前拓扑质量检查。
+            <disabledText />
+          </tooltip>
+        </button>
+
+        <!-- 检查空洞：自绘图标（已入库的 Images/FindHole PNG） -->
+        <button id="GHBoxAddIn_Check_Hole"
+                caption="检查空洞"
+                className="GHBoxAddIn.Scripts.Check.ShowFindHole"
+                loadOnClick="true"
+                keytip="CH"
+                smallImage="pack://application:,,,/GHBoxAddIn;component/Images/FindHole16.png"
+                largeImage="pack://application:,,,/GHBoxAddIn;component/Images/FindHole32.png">
+          <tooltip heading="检查空洞">
+            检查所选面图层（可多选批量）中的空洞图斑（回字形/甜甜圈，内部中空）：按融合→线→面→融合→擦除→拆单部件工具链提取，每个空洞输出为一个面要素，记录空洞面积（椭球面积·平方米），便于入库前定位清理。
             <disabledText />
           </tooltip>
         </button>

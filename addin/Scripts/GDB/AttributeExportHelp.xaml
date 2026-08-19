@@ -1,0 +1,40 @@
+<controls:ProWindow x:Class="GHBoxAddIn.Scripts.GDB.AttributeExportHelp"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+        mc:Ignorable="d"
+        Title="按属性拆库 - 使用说明" Height="560" Width="680"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="16">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="按属性拆库工具" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" />
+
+                <TextBlock Text="一、工具用途" FontSize="14" FontWeight="Bold" Margin="0,8,0,4" />
+                <TextBlock TextWrapping="Wrap" Margin="8,0,0,4"
+                           Text="从输入文件夹下的多个 GDB/MDB 数据库中，查找指定图层，并按属性筛选条件分别导出为 SHP 或 GDB。适合按条件批量提取各县（区）图层成果的场景。" />
+
+                <TextBlock Text="二、参数说明" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 输入文件夹：包含多个 GDB/MDB 数据库的文件夹，仅枚举第一层的数据库。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 图层名称：要查找并导出的图层名称，不区分大小写。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 筛选条件：SQL 查询语句（如 XZQDM = '430000'），留空表示整层导出。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="4. 输出文件夹：导出结果的存放目录，不存在时自动创建。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="5. 导出为GDB：勾选后导出为 GDB 要素类，不勾选则导出为 SHP。" TextWrapping="Wrap" />
+
+                <TextBlock Text="三、处理规则" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 自动枚举输入文件夹下全部 .gdb 和 .mdb，按名称排序后依次处理。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 某个数据库缺少该图层时，仅记录警告并跳过该库，不影响其他库。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 导出为 GDB 时：按数据库名生成同名 GDB（原名是 .gdb 则同名，否则用「库基底名.gdb」），图层导出到该 GDB 内。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="4. 导出为 SHP 时：每个数据库导出为一个「库基底名.shp」。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="5. 输出位置已存在同名结果时，先删除旧结果再导出。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="6. 导出后核对条数：导出结果为 0 条时仅提示警告，不中断处理。" TextWrapping="Wrap" />
+
+                <TextBlock Text="四、容错机制" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="单个数据库导出失败时，记录到异常日志并继续处理下一个数据库；全部处理结束后输出成功/失败统计和异常日志路径。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="异常日志文件：输出文件夹下的「按属性拆库_异常日志_时间戳.txt」。" TextWrapping="Wrap" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</controls:ProWindow>

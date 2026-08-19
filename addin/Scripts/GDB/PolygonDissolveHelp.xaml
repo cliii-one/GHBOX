@@ -1,0 +1,40 @@
+<controls:ProWindow x:Class="GHBoxAddIn.Scripts.GDB.PolygonDissolveHelp"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+        mc:Ignorable="d"
+        Title="按属性合并 - 使用说明" Height="560" Width="680"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="16">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="按属性合并工具" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" />
+
+                <TextBlock Text="一、工具用途" FontSize="14" FontWeight="Bold" Margin="0,8,0,4" />
+                <TextBlock TextWrapping="Wrap" Margin="8,0,0,4"
+                           Text="对输入面要素类中，合并字段值相同的相邻图斑进行空间合并。适合处理地类图斑碎化、按属性消除细小图斑到相邻大图斑的场景。" />
+
+                <TextBlock Text="二、参数说明" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 输入要素类（面）：要合并的面要素类，支持 GDB 要素类或 SHP。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 合并字段：按哪些字段判断属性相同，多个字段用英文逗号分隔（如 XZQDM,DLBM）。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 合并规则：向公共边最长的图斑合并，或向面积最大的图斑合并。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="4. 输出要素类（面）：合并结果的输出路径，父目录不存在时自动创建。" TextWrapping="Wrap" />
+
+                <TextBlock Text="三、处理规则" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 先把输入要素类复制到输出要素类，输出位置已存在同名结果时先删除旧结果。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 多个合并字段时，自动创建临时字段 ZZ_COMBINED_KEY，用「value1|value2」拼接后作为分割依据；单个字段直接使用原字段。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 按属性分割：用 split 工具把要素按合并字段值分成若干子图层。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="4. 循环消除：对每个子图层，每轮选中除面积最大外全部要素执行 eliminate。向公共边最长对应按边界最长规则，向面积最大对应按面积最大规则；重复多轮可处理链式相邻（A-B-C 依次并到 A），安全阀为 50 轮。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="5. 全部子图层消除完成后，用 merge 工具合并回输出要素类；若发生了合并，再用修复几何工具整理几何。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="6. 结束后输出合并前后总条数和实际合并的图斑对数。" TextWrapping="Wrap" />
+
+                <TextBlock Text="四、容错机制" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 单个子图层某轮消除失败时，记录警告并跳过该子图层，不影响其他子图层继续处理。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 单轮消除异常或安全阀触发时不会中断整个工具，并会清理中间产生的临时数据库（临时 GDB 存放于系统临时目录）。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 合并过程中异常中断时，可将错误信息记录到异常日志；异常日志文件：输出文件夹下的「按属性合并_异常日志_时间戳.txt」。" TextWrapping="Wrap" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</controls:ProWindow>
