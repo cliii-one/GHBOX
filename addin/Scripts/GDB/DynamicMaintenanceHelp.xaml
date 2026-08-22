@@ -1,0 +1,50 @@
+<controls:ProWindow x:Class="GHBoxAddIn.Scripts.GDB.DynamicMaintenanceHelp"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+        mc:Ignorable="d"
+        Title="动态维护 - 使用说明" Height="620" Width="720"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="16">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="动态维护工具" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" />
+
+                <TextBlock Text="一、工具用途" FontSize="14" FontWeight="Bold" Margin="0,8,0,4" />
+                <TextBlock TextWrapping="Wrap" Margin="8,0,0,4"
+                           Text="根据备案数据库A（部备案版本）和维护后全量数据库B，自动生成符合国土空间规划汇交要求的动态维护数据库C。数据库C包含维护前（WHQ）、维护层（WHC）、维护后（WHH）三类图层，记录每个维护图斑的变更类型、编号和元数据。" />
+
+                <TextBlock Text="二、参数说明" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="1. 备案数据库A（部备案版本）：已备案的原始 .gdb 数据库。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="2. 维护后全量数据库B：经过维护修改后的 .gdb 数据库。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="3. 动态维护数据库C存放目录：输出数据库将自动创建在此目录下。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="4. 选择需维护图层（可多选）：从11个预定义图层中选择需要维护的图层。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="5. 行政区代码/名称/维护年度：用于生成数据库C的命名和图斑编码。" TextWrapping="Wrap" />
+
+                <TextBlock Text="三、支持的图层" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" TextWrapping="Wrap"
+                           Text="规划分区、用地用海规划分区、中心城区规划分区、中心城区规划用地用海、中心城区城市蓝线、中心城区城市绿线、中心城区城市紫线、中心城区城市黄线、洪涝风险控制线、历史文化保护线（共10个有效图层，乡级主体功能定位暂跳过）。" />
+
+                <TextBlock Text="四、处理类型" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" TextWrapping="Wrap"
+                           Text="属性变更型（规划分区/用地用海等）：通过成对相交A∩B识别属性变化的图斑，生成维护前/维护后/维护层三个图层。" />
+                <TextBlock Margin="8,0,0,2" TextWrapping="Wrap"
+                           Text="调入调出型（城市蓝线/绿线等）：通过Erase差集识别空间变化（A有B无=调出，B有A无=调入），生成维护层。" />
+
+                <TextBlock Text="五、输出数据库C结构" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" TextWrapping="Wrap"
+                           Text="命名格式：{行政区代码}{行政区名称}{维护年度}年度县级国土空间总体规划动态维护.gdb" />
+                <TextBlock Margin="8,0,0,2" TextWrapping="Wrap"
+                           Text="每个维护图层生成三个结果：WHQ{图层名}（维护前）、WHC{图层名}（维护层）、WHH{图层名}（维护后）。" />
+                <TextBlock Margin="8,0,0,2" TextWrapping="Wrap"
+                           Text="维护层包含标准字段：BSM（标识码）、YSDM（要素代码）、XZQDM/XZQMC（行政区）、WHLX（维护类型：1=调入/2=属性变更/3=调出）、WHBH（维护编号）等。" />
+
+                <TextBlock Text="六、容错机制" FontSize="14" FontWeight="Bold" Margin="0,12,0,4" />
+                <TextBlock Margin="8,0,0,2" Text="单个图层处理失败时，记录警告并继续处理下一个图层，不中断整体。" TextWrapping="Wrap" />
+                <TextBlock Margin="8,0,0,2" Text="输出数据库C已存在时自动删除重建。" TextWrapping="Wrap" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</controls:ProWindow>

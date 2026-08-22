@@ -16,6 +16,7 @@
       <tabs>
         <tab id="GHBoxAddIn_Tab" caption="规划盒子" keytip="GH">
           <group refID="GHBoxAddIn_Group_GDB" />
+          <group refID="GHBoxAddIn_Group_Planning" />
           <group refID="GHBoxAddIn_Group_Check" />
           <group refID="GHBoxAddIn_Group_Help" />
         </tab>
@@ -31,6 +32,11 @@
           <button refID="GHBoxAddIn_GDB_Compare" size="large" />
           <button refID="GHBoxAddIn_GDB_AttributeExport" size="large" />
           <button refID="GHBoxAddIn_GDB_PolygonDissolve" size="large" />
+        </group>
+        <!-- 国土空间规划：面向国土空间规划动态维护等专项业务，与"数据库处理"分组并列 -->
+        <group id="GHBoxAddIn_Group_Planning" caption="国土空间规划" appearsOnAddInTab="false">
+          <button refID="GHBoxAddIn_Planning_DynMaint" size="large" />
+          <button refID="GHBoxAddIn_Planning_ZHQD" size="large" />
         </group>
         <!-- 数据库检查：面向入库前质量检查（弧线段/尖锐角等），与"数据库处理"分组并列 -->
         <group id="GHBoxAddIn_Group_Check" caption="数据库检查" appearsOnAddInTab="false">
@@ -154,6 +160,36 @@
                 largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GeoprocessingTool_Dissolve_management.png">
           <tooltip heading="按属性合并">
             按指定属性字段合并相邻图斑：按字段值分组后，将小图斑向相邻的最大图斑（或公共边最长图斑）合并，支持多字段组合。
+            <disabledText />
+          </tooltip>
+        </button>
+
+        <!-- ===== 国土空间规划分组 ===== -->
+
+        <!-- 动态维护：Pro 官方 genericsync 图标（同步/维护语义） -->
+        <button id="GHBoxAddIn_Planning_DynMaint"
+                caption="动态维护"
+                className="GHBoxAddIn.Scripts.GDB.ShowDynamicMaintenance"
+                loadOnClick="true"
+                keytip="PD"
+                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/genericsync16.png"
+                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/genericsync32.png">
+          <tooltip heading="动态维护">
+            根据备案数据库A和维护后全量数据库B，自动生成符合汇交要求的动态维护数据库C，包含维护前/维护层/维护后三类图层。
+            <disabledText />
+          </tooltip>
+        </button>
+
+        <!-- 镇区划定：Pro 官方 projectarea 图标（项目区域/划定区域语义） -->
+        <button id="GHBoxAddIn_Planning_ZHQD"
+                caption="镇区划定"
+                className="GHBoxAddIn.Scripts.GDB.ShowZHQD"
+                loadOnClick="true"
+                keytip="PZ"
+                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/projectarea16.png"
+                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/projectarea32.png">
+          <tooltip heading="镇区划定">
+            镇区划定工具（开发中）。
             <disabledText />
           </tooltip>
         </button>

@@ -1,4 +1,5 @@
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core.Geoprocessing;
 using System;
 using System.Collections.Generic;
@@ -14,15 +15,41 @@ namespace GHBoxAddIn.Scripts.GDB
     /// </summary>
     internal static class GpHelper
     {
-        /// <summary>执行 GP 工具，失败抛出带消息的异常</summary>
-        public static async Task<IGPResult> RunToolAsync(string tool, IEnumerable<string> args, CancellationToken ct)
+        /// <summary>执行 GP 工具，失败抛出带消息的异常。
+        /// 可选传入 targetSR 自动设置 outputCoordinateSystem 环境变量。
+        /// 可选传入 scratchPath 设置 workspace/scratchWorkspace（避免中间数据写入只读输入库）。</summary>
+        public static async Task<IGPResult> RunToolAsync(string tool, IEnumerable<string> args, CancellationToken ct,
+            SpatialReference targetSR = null, string scratchPath = null)
         {
             ct.ThrowIfCancellationRequested();
 
-            IGPResult result = await Geoprocessing.ExecuteToolAsync(
-                tool, args,
-                Geoprocessing.MakeEnvironmentArray(overwriteoutput: true),
-                null, null, GPExecuteToolFlags.None);
+            // 构建环境数组
+            IGPResult result;
+            if (targetSR != null && !string.IsNullOrEmpty(scratchPath))
+            {
+                var env = Geoprocessing.MakeEnvironmentArray(
+                    overwriteoutput: true,
+                    outputCoordinateSystem: targetSR,
+                    workspace: scratchPath,
+                    scratchWorkspace: scratchPath);
+                result = await Geoprocessing.ExecuteToolAsync(
+                    tool, args, env, null, null, GPExecuteToolFlags.None);
+            }
+            else if (targetSR != null)
+            {
+                var env = Geoprocessing.MakeEnvironmentArray(
+                    overwriteoutput: true,
+                    outputCoordinateSystem: targetSR);
+                result = await Geoprocessing.ExecuteToolAsync(
+                    tool, args, env, null, null, GPExecuteToolFlags.None);
+            }
+            else
+            {
+                result = await Geoprocessing.ExecuteToolAsync(
+                    tool, args,
+                    Geoprocessing.MakeEnvironmentArray(overwriteoutput: true),
+                    null, null, GPExecuteToolFlags.None);
+            }
 
             ct.ThrowIfCancellationRequested();
 
