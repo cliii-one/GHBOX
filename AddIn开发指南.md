@@ -40,7 +40,18 @@ GHBOX/
 │       │   ├── ShowDbCompare.cs     # 按钮：数据库比对
 │       │   ├── DbCompare.xaml(.cs)  # 比对窗口（调度）
 │       │   ├── DbCompareCore.cs     # 比对核心逻辑（纯逻辑类，无UI）
-│       │   └── DbCompareHelp.xaml(.cs) # 数据库比对使用说明
+│       │   ├── DbCompareHelp.xaml(.cs) # 数据库比对使用说明
+│       │   ├── ShowAttributeExport.cs # 按钮：按属性拆库
+│       │   ├── AttributeExport.xaml(.cs) # 窗口+业务逻辑
+│       │   ├── AttributeExportHelp.xaml(.cs) # 按属性拆库使用说明
+│       │   ├── ShowPolygonDissolve.cs # 按钮：按属性合并
+│       │   ├── PolygonDissolve.xaml(.cs) # 窗口+业务逻辑（Split+Eliminate循环消除）
+│       │   ├── PolygonDissolveHelp.xaml(.cs) # 按属性合并使用说明
+│       │   ├── ShowDynamicMaintenance.cs # 按钮：动态维护
+│       │   ├── DynamicMaintenance.xaml(.cs) # 窗口+业务逻辑（属性变更/调入调出）
+│       │   ├── DynamicMaintenanceHelp.xaml(.cs) # 动态维护使用说明
+│       │   ├── ShowZHQD.cs            # 按钮：镇区划定（开发中）
+│       │   └── ZHQD.xaml(.cs)         # 窗口（占位，开发中）
 │       ├── Check/                # 数据库检查类工具
 │       │   ├── ShowSearchArc.cs     # 按钮：查找弧线段
 │       │   ├── SearchArc.xaml(.cs)  # 窗口+业务逻辑（曲线段检测+结果落库）
@@ -58,7 +69,10 @@ GHBOX/
     ├── 面积重算.pyt            # 对应「面积重算」按钮的逻辑基准
     ├── 删除图层.pyt            # 对应「删除图层」按钮的逻辑基准
     ├── 数据库比对.pyt          # 对应「数据库比对」按钮的逻辑基准（Excel 报告用 Pro 自带 openpyxl）
-    └── 数据库检查.pyt          # 查找弧线段/查找尖锐角的逻辑基准
+    ├── 数据库检查.pyt          # 查找弧线段/查找尖锐角的逻辑基准
+    ├── 按属性拆库.pyt          # 对应「按属性拆库」按钮的逻辑基准
+    ├── 按属性合并.pyt          # 对应「按属性合并」按钮的逻辑基准
+    └── 动态维护.pyt            # 对应「动态维护」按钮的逻辑基准
 ```
 
 **新增工具三件套**：在 `Scripts/分类/` 下新建 `ShowXxx.cs + Xxx.xaml + Xxx.xaml.cs`

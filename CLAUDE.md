@@ -108,6 +108,58 @@ flowchart TD
   - 优先用 Pro 资源库提取的官方图标（`pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/xxx.png`，名字必须确认存在，`GetManifestResourceNames` 看不到条目是正常的，图标在 `.g.resources` 容器流里）；
   - Pro 资源库没有合适语义时自绘 PNG（16/32）放 `addin/Images/`，csproj 加 `<Resource>` 嵌入，DAML 用 `pack://application:,,,/GHBoxAddIn;component/Images/xxx.png`；
   - 工具箱级图标（`<AddInInfo>` 的 `<Image>`）用包内**相对路径** `Images\GHBox32.png`，由 build_all.ps1 把 Images 目录复制进包根，缺这步「加载项」列表无图标。
+
+#### 从 Pro SDK NuGet 缓存提取官方图标列表（无需安装 Pro）
+
+Pro 的图标全部嵌入在 `ArcGIS.Desktop.Resources.dll` 的 `.g.resources` 容器流中。即使本机未安装 ArcGIS Pro，也能从 NuGet 缓存中提取。
+
+**① DLL 位置**（NuGet 缓存）：
+
+```
+%USERPROFILE%\.nuget\packages\esri.arcgispro.extensions30\
+  3.3.0.52636\ref\net8.0-windows7.0\ArcGIS.Desktop.Resources.dll   ← Pro 3.3+
+  3.2.0.49743\ref\net6.0-windows7.0\ArcGIS.Desktop.Resources.dll   ← Pro 3.0+
+```
+
+版本号以实际安装的为准，目录结构固定。
+
+**② 用 PowerShell 提取全部图标名**：
+
+```powershell
+$dllPath = "$env:USERPROFILE\.nuget\packages\esri.arcgispro.extensions30\3.3.0.52636\ref\net8.0-windows7.0\ArcGIS.Desktop.Resources.dll"
+$asm = [System.Reflection.Assembly]::LoadFrom($dllPath)
+$stream = $asm.GetManifestResourceStream("ArcGIS.Desktop.Resources.g.resources")
+$reader = New-Object System.Resources.ResourceReader($stream)
+$keys = @()
+$e = $reader.GetEnumerator()
+while ($e.MoveNext()) { $keys += $e.Key }
+$stream.Dispose()
+
+# 按关键词搜索（如 edit / sync / update / merge / tool / data / refresh）
+$keys | Where-Object { $_ -match "images/edit" -and $_ -match "(16|32)\.png$" } | Sort-Object
+```
+
+资源命名规则：`images/{图标名}{尺寸}.png`，全部小写，总计约 18000+ 条目。
+
+**③ DAML 引用格式**：
+
+```xml
+smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/{图标名}16.png"
+largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/{图标名}32.png"
+```
+
+> **注意**：资源名在 DLL 内全小写，但 WPF 资源加载在 Windows 上**不区分大小写**，所以 DAML 中用驼峰或小写均可。推荐直接用 DLL 中的原始小写名避免混淆。
+
+**④ 已验证可用的图标名速查**（动态维护相关）：
+
+| 图标名 | 语义 |
+|--------|------|
+| `genericsync` | 通用同步/维护（当前动态维护使用） |
+| `geoprocessingtool` | GP 工具箱 |
+| `geoprocessingtool_merge_management` | 合并工具 |
+| `geodatabase` | 数据库 |
+| `geodatabasebeingedited` | 正在编辑的数据库 |
+| `updatesubnetworks` | 更新子网络 |
 - **`.pyt` 留档口径**：允许与 C# 有实现细节差异，但**结论口径必须一致**，并在注释中注明差异与粒度以谁为准。
   - 例：「查找弧线段」arcpy 拿不到段级类型，用 `SHAPE@JSON` 含 `"curve"` 键整体导出，C# 才能逐段拆分 → 结论一致、粒度以 C# 为准。
 - **不得在正式工具箱目录留调试脚本**：一次性诊断脚本（`_diag_*.py`）用完即删，禁止带硬编码测试路径（如 `c:\Users\...\测试数据\`）入库。已清过一次（2026-08 删除 4 个），后续再犯视为跑偏。
