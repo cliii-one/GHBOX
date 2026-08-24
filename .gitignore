@@ -3,6 +3,9 @@ addin/bin/
 addin/obj/
 addin/dist/
 
+# ============ 工具箱留档（业务基准，仅本地保留，不入库） ============
+toolbox/
+
 # ============ .NET / NuGet ============
 *.user
 *.suo
