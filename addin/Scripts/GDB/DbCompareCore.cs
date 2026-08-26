@@ -59,6 +59,7 @@ namespace GHBoxAddIn.Scripts.GDB
             public List<string> FieldsOnlyInA = new List<string>();
             public List<string> FieldsOnlyInB = new List<string>();
             public string DiffSummary;                // 差异摘要（存在差异时）
+            public string ExportFailReason;           // 差异落库失败原因（不影响比对结论）
         }
 
         /// <summary>差异图斑明细（Excel"差异图斑清单"表的一行）</summary>
@@ -90,10 +91,6 @@ namespace GHBoxAddIn.Scripts.GDB
         public async Task Run(string gdbA, string gdbB, string idField,
                               IEnumerable<string> layerFilter, string outputGdb, CancellationToken ct)
         {
-            // 记录库路径供差异落库的 GP 工具使用
-            gdbPathForLayer_A = gdbA;
-            gdbPathForLayer_B = gdbB;
-
             // ---- 1. 库级：打开两库 ----
             using var geoA = GpHelper.OpenGeodatabase(gdbA);
             using var geoB = GpHelper.OpenGeodatabase(gdbB);
@@ -248,9 +245,21 @@ namespace GHBoxAddIn.Scripts.GDB
                         Detail = string.Join("、", kv.Value) });
 
                 // ---- 差异落库 ----
+                // ★ 导出失败单独捕获：比对结论已算出，不能因落库失败被改写为"无法比对"
                 if (outputGdb != null && (onlyAIds.Count + onlyBIds.Count + geomDiff.Count + attrDiff.Count) > 0)
-                    await ExportDiffFeaturesAsync(layerName,
-                        onlyAIds, onlyBIds, geomDiff, attrDiff.Keys.ToList(), dictA, dictB, outputGdb, ct);
+                {
+                    try
+                    {
+                        await ExportDiffFeaturesAsync(geoA, geoB, layerName,
+                            onlyAIds, onlyBIds, geomDiff, attrDiff.Keys.ToList(), dictA, dictB, outputGdb, ct);
+                    }
+                    catch (OperationCanceledException) { throw; }
+                    catch (Exception ex)
+                    {
+                        result.ExportFailReason = ex.Message;
+                        LogWarnCore($"图层 {layerName}：差异图斑落库失败（不影响比对结论）：{ex.Message}");
+                    }
+                }
 
                 // ---- 状态判定：任一维度有差异即"存在差异" ----
                 bool hasDiff = !result.ExtentEqual || onlyAIds.Count > 0 || onlyBIds.Count > 0 ||
@@ -268,12 +277,20 @@ namespace GHBoxAddIn.Scripts.GDB
                     if (result.FieldsOnlyInB.Count > 0) parts.Add("B库多字段");
                     result.DiffSummary = string.Join("；", parts);
                 }
+
+                // 落库失败在摘要中提示（比对结论保持"存在差异/一致"，不被覆盖）
+                if (!string.IsNullOrEmpty(result.ExportFailReason))
+                    result.DiffSummary = string.IsNullOrEmpty(result.DiffSummary)
+                        ? $"落库失败（{result.ExportFailReason}）"
+                        : $"{result.DiffSummary}；落库失败";
             }
             catch (OperationCanceledException) { throw; }
             catch (Exception ex)
             {
+                // ★ 记录具体原因并同步输出到界面日志，避免只看到"无法比对"却查不到原因
                 result.Status = "无法比对";
                 result.FailReason = ex.Message;
+                LogWarnCore($"图层 {layerName} 无法比对：{ex.Message}");
             }
             return result;
         }
@@ -463,40 +480,81 @@ namespace GHBoxAddIn.Scripts.GDB
 
         // ---------------- 差异落库 ----------------
 
-        /// <summary>记录 GP 导出所需的库路径（Run 时赋值）</summary>
-        private string gdbPathForLayer_A, gdbPathForLayer_B;
-
         /// <summary>
         /// 差异图斑导出到结果库（每图层 4 类，有则先删）：
         /// A库独有 / B库独有 / 几何不一致 / 属性不一致。
-        /// 用 GP 工具链（MakeFeatureLayer 按 OBJECTID 筛选 + CopyFeatures/Append），
+        /// 用 GP 工具链（analysis.Select 按 OID 条件直选 + Append 追加），
         /// 继承原图层全部字段与坐标系，不依赖 DDL API。
+        /// 源路径支持要素数据集内图层（全路径），OID 筛选用实际 OID 字段名。
         /// </summary>
-        private async Task ExportDiffFeaturesAsync(string layerName,
+        private async Task ExportDiffFeaturesAsync(Geodatabase geoA, Geodatabase geoB, string layerName,
             List<string> onlyAIds, List<string> onlyBIds, List<string> geomDiff, List<string> attrDiff,
             Dictionary<string, FeatureRecord> dictA, Dictionary<string, FeatureRecord> dictB,
             string outputGdb, CancellationToken ct)
         {
-            string srcA = $"{gdbPathForLayer_A}\\{layerName}";
-            string srcB = $"{gdbPathForLayer_B}\\{layerName}";
+            // 解析两库中该图层的真实全路径（含要素数据集）与 OID 字段名
+            string srcA = ResolveFcPath(geoA, layerName);
+            string oidFieldA = ResolveOidField(geoA, layerName);
+            string srcB = ResolveFcPath(geoB, layerName);
+            string oidFieldB = ResolveOidField(geoB, layerName);
 
             await ExportOneByOidAsync(srcA, outputGdb, layerName,
-                onlyAIds.Select(id => dictA[id].Oid).ToList(), "A库独有图斑", ct);
+                onlyAIds.Select(id => dictA[id].Oid).ToList(), "A库独有图斑", oidFieldA, ct);
             await ExportOneByOidAsync(srcB, outputGdb, layerName,
-                onlyBIds.Select(id => dictB[id].Oid).ToList(), "B库独有图斑", ct);
+                onlyBIds.Select(id => dictB[id].Oid).ToList(), "B库独有图斑", oidFieldB, ct);
             await ExportOneByOidAsync(srcA, outputGdb, layerName,
-                geomDiff.Select(id => dictA[id].Oid).ToList(), "几何不一致", ct);
+                geomDiff.Select(id => dictA[id].Oid).ToList(), "几何不一致", oidFieldA, ct);
             await ExportOneByOidAsync(srcA, outputGdb, layerName,
-                attrDiff.Select(id => dictA[id].Oid).ToList(), "属性不一致", ct);
+                attrDiff.Select(id => dictA[id].Oid).ToList(), "属性不一致", oidFieldA, ct);
+        }
+
+        /// <summary>取要素类 GP 全路径：根级图层 = 库路径\图层名；
+        /// 要素数据集内图层 = 库路径\数据集名\图层名（OpenDataset 按短名称打开，
+        /// 但 GP 需要完整相对路径才能定位）。解析失败回退为根级拼接（与旧行为一致）。</summary>
+        private static string ResolveFcPath(Geodatabase gdb, string layerName)
+        {
+            // ★ GetPath() 返回 Uri，直接插值会得到 "file:///C:/..." 格式，GP 无法识别（ERROR 000732）
+            //   必须先转 LocalPath 拿到真实 Windows 路径
+            string gdbPath = gdb.GetPath()?.LocalPath;
+            try
+            {
+                // 枚举各要素数据集，若其中含该短名图层，返回 数据集名\图层名 全路径
+                foreach (var dsDef in gdb.GetDefinitions<FeatureDatasetDefinition>())
+                {
+                    using var ds = gdb.OpenDataset<FeatureDataset>(dsDef.GetName());
+                    var fcDef = ds.GetDefinitions<FeatureClassDefinition>()
+                                  .FirstOrDefault(d => string.Equals(
+                                      d.GetName(), layerName, StringComparison.OrdinalIgnoreCase));
+                    if (fcDef != null)
+                        return $"{gdbPath}\\{dsDef.GetName()}\\{layerName}";
+                }
+            }
+            catch { /* 枚举异常时回退根级 */ }
+            return $"{gdbPath}\\{layerName}";
+        }
+
+        /// <summary>取要素类真实 OID 字段名（绝大多数为 OBJECTID，个别数据源不同）</summary>
+        private static string ResolveOidField(Geodatabase gdb, string layerName)
+        {
+            try
+            {
+                return gdb.GetDefinition<FeatureClassDefinition>(layerName).GetObjectIDField();
+            }
+            catch { return "OBJECTID"; }
         }
 
         /// <summary>
-        /// 按 OBJECTID 集合导出差异图斑到结果库：
-        /// 结果要素类已存在先删；每 500 个 OID 一批（避免 SQL 过长），
-        /// 首批 CopyFeatures 创建，后续批 Append 追加。
+        /// 按 OID 集合导出差异图斑到结果库：
+        /// 结果要素类已存在先删（重复运行覆盖）；每 500 个 OID 一批（避免 SQL 过长）。
+        ///
+        /// ★ 不用 MakeFeatureLayer：AddIn 内 GP 调用间临时图层不持久
+        ///   （第一次运行碰巧成功、第二次报 ghbox_diff_0 不存在，即此坑），
+        ///   改用 analysis.Select 直接按 where 条件导出到 _tmp_ 中转要素类再 Append，
+        ///   中转数据带本次时间戳命名，finally 自动清理（铁律：临时数据 _tmp_ 前缀 + 运行标记）。
+        /// where 子句用传入的实际 OID 字段名（默认 OBJECTID）。
         /// </summary>
-        private static async Task ExportOneByOidAsync(string srcPath, string outputGdb, string layerName,
-            List<long> oids, string diffType, CancellationToken ct)
+        private async Task ExportOneByOidAsync(string srcPath, string outputGdb, string layerName,
+            List<long> oids, string diffType, string oidField, CancellationToken ct)
         {
             if (oids == null || oids.Count == 0) return;
             string outName = $"差异_{diffType}_{layerName}";
@@ -508,26 +566,48 @@ namespace GHBoxAddIn.Scripts.GDB
                 await GpHelper.RunToolAsync("management.Delete",
                     Geoprocessing.MakeValueArray(outPath), ct);
 
-            const int batchSize = 500;
-            for (int start = 0; start < oids.Count; start += batchSize)
+            // 本次运行的临时中转标记（铁律：_tmp_ 前缀 + 运行标记，结束自动清理）
+            string tmpTag = DateTime.Now.ToString("HHmmssfff");
+            var tmpFcList = new List<string>();
+            try
             {
-                ct.ThrowIfCancellationRequested();
-                string inList = string.Join(",", oids.Skip(start).Take(batchSize));
-                string where = $"OBJECTID IN ({inList})";
-                string lyrName = $"ghbox_diff_{start}";
+                const int batchSize = 500;
+                for (int start = 0; start < oids.Count; start += batchSize)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    string inList = string.Join(",", oids.Skip(start).Take(batchSize));
+                    string where = $"{oidField} IN ({inList})";
+                    // 中转要素类：_tmp_ 前缀 + 批次号 + 时间戳，防上次崩溃残留撞名
+                    string tmpFc = $"{outputGdb.TrimEnd('\\')}\\_tmp_diff_{start}_{tmpTag}";
+                    tmpFcList.Add(tmpFc);
 
-                await GpHelper.RunToolAsync("management.MakeFeatureLayer",
-                    Geoprocessing.MakeValueArray(srcPath, lyrName, where), ct);
+                    await GpHelper.RunToolAsync("analysis.Select",
+                        Geoprocessing.MakeValueArray(srcPath, tmpFc, where), ct);
 
-                if (start == 0)
-                    await GpHelper.RunToolAsync("management.CopyFeatures",
-                        Geoprocessing.MakeValueArray(lyrName, outPath), ct);
-                else
-                    await GpHelper.RunToolAsync("management.Append",
-                        Geoprocessing.MakeValueArray(lyrName, outPath, "NO_TEST"), ct);
+                    if (start == 0)
+                        await GpHelper.RunToolAsync("management.CopyFeatures",
+                            Geoprocessing.MakeValueArray(tmpFc, outPath), ct);
+                    else
+                        await GpHelper.RunToolAsync("management.Append",
+                            Geoprocessing.MakeValueArray(tmpFc, outPath, "NO_TEST"), ct);
 
-                await GpHelper.RunToolAsync("management.Delete",
-                    Geoprocessing.MakeValueArray(lyrName), ct);
+                    await GpHelper.RunToolAsync("management.Delete",
+                        Geoprocessing.MakeValueArray(tmpFc), ct);
+                    tmpFcList.Remove(tmpFc);   // 已删除的从清理清单移除
+                }
+            }
+            finally
+            {
+                // 兜底清理：中途失败/取消时残留的中转要素类逐个删掉（失败静默，不影响主流程）
+                foreach (string tmp in tmpFcList)
+                {
+                    try
+                    {
+                        await GpHelper.RunToolAsync("management.Delete",
+                            Geoprocessing.MakeValueArray(tmp), CancellationToken.None);
+                    }
+                    catch { /* 残留清理尽力而为 */ }
+                }
             }
         }
 
